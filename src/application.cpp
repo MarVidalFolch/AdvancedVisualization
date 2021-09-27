@@ -50,6 +50,12 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		node->mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
 		//node->model.scale(5, 5, 5);
 		node->material = mat;
+
+		Image* im_text = new Image();
+		im_text->loadTGA("data/environments/city/bk.tga");
+		node->material->texture = new Texture(im_text);
+		// Es pot fer a un Texture::Get("filename");
+
 		mat->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/normal.fs");
 		node_list.push_back(node);
 	}
