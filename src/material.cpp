@@ -17,6 +17,7 @@ StandardMaterial::~StandardMaterial()
 void StandardMaterial::setUniforms(Camera* camera, Matrix44 model)
 {
 	//upload node uniforms
+	shader->enable();
 	shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
 	shader->setUniform("u_camera_position", camera->eye);
 	shader->setUniform("u_model", model);
@@ -81,4 +82,27 @@ void WireframeMaterial::render(Mesh* mesh, Matrix44 model, Camera * camera)
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
+}
+
+TextureMaterial::TextureMaterial() {
+	color = vec4(1.f, 1.f, 1.f, 1.f);
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+}
+
+PhongMaterial::PhongMaterial(Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh) {
+	color = vec4(0.f, 0.f, 1.f, 1.f);
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
+
+	this->ka = ka;
+	this->kd = kd;
+	this->ks = ks;
+	this->alpha_sh = alpha_sh;
+}
+
+void PhongMaterial::setUniforms(Camera* camera, Matrix44 model) {
+	StandardMaterial::setUniforms(camera, model);
+	shader->setUniform("u_ka", ka);
+	shader->setUniform("u_kd", kd);
+	shader->setUniform("u_ks", ks);
+	shader->setUniform("u_alpha_sh", alpha_sh);
 }

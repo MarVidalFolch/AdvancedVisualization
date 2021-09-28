@@ -45,18 +45,16 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	camera->setPerspective(45.f,window_width/(float)window_height,0.1f,10000.f); //set the projection, we want to be perspective
 
 	{
-		StandardMaterial* mat = new StandardMaterial();
+		StandardMaterial* mat = new PhongMaterial(Vector3(1.f, 1.f, 1.f), Vector3(1.f, 1.f, 1.f), Vector3(1.f, 1.f, 1.f), 1.0f);
 		SceneNode* node = new SceneNode("Visible node");
 		node->mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
 		//node->model.scale(5, 5, 5);
 		node->material = mat;
 
-		Image* im_text = new Image();
-		im_text->loadTGA("data/environments/city/bk.tga");
-		node->material->texture = new Texture(im_text);
-		// Es pot fer a un Texture::Get("filename");
+		// Loading Texture
+		node-> material->texture = Texture::Get("data/brdfLUT.png");
 
-		mat->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/normal.fs");
+		//mat->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/normal.fs");
 		node_list.push_back(node);
 	}
 	
@@ -81,6 +79,7 @@ void Application::render(void)
 	glDisable(GL_CULL_FACE);
 
 	for (size_t i = 0; i < node_list.size(); i++) {
+		node_list[i]->material->setUniforms(camera, node_list[i]->model);
 		node_list[i]->render(camera);
 
 		if(render_wireframe)

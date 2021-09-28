@@ -39,4 +39,22 @@ public:
 	void render(Mesh* mesh, Matrix44 model, Camera * camera);
 };
 
+class TextureMaterial : public StandardMaterial {
+public:
+	TextureMaterial();
+	~TextureMaterial();
+};
+
+class PhongMaterial : public StandardMaterial{
+public:
+	Vector3 ka;
+	Vector3 kd;
+	Vector3 ks;
+	float alpha_sh;
+
+	PhongMaterial(Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh);
+	void setUniforms(Camera* camera, Matrix44 model);
+
+};
+
 #endif
