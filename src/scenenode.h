@@ -10,9 +10,14 @@
 
 class Light;
 
+enum class SceneNodeTypes {
+	OBJECT,
+	LIGHT
+};
+
 class SceneNode {
 public:
-
+	SceneNodeTypes type;
 	static unsigned int lastNameId;
 
 	SceneNode();
@@ -28,6 +33,23 @@ public:
 	virtual void render(Camera* camera);
 	virtual void renderWireframe(Camera* camera);
 	virtual void renderInMenu();
+};
+
+class ObjectNode : public SceneNode {
+public:
+	ObjectNode();
+};
+
+class Light : public SceneNode {
+public:
+	Vector4 color;
+	Vector3 diffuse;
+	Vector3 specular;
+	float max_distance;
+	// Posar els parametres de la llum
+
+	Light(Vector3 position, Vector4 color, Vector3 diffuse, Vector3 specular, float max_distance);
+	void setUniforms(Shader* shader);
 };
 
 #endif

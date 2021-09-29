@@ -65,3 +65,24 @@ void SceneNode::renderInMenu()
 		ImGui::TreePop();
 	}
 }
+
+ObjectNode::ObjectNode() {
+	type = SceneNodeTypes::OBJECT;
+}
+
+Light::Light(Vector3 position, Vector4 color, Vector3 diffuse, Vector3 specular, float max_distance) {
+	type = SceneNodeTypes::LIGHT;
+	this->model.setTranslation(position.x, position.y, position.z);
+	this->color = color;
+	this->diffuse = diffuse;
+	this->specular = specular;
+	this->max_distance = max_distance;
+}
+
+void Light::setUniforms(Shader* shader) {
+	shader->setUniform("u_light_pos", model.getTranslation());
+	shader->setUniform("u_light_color", color);
+	shader->setUniform("u_light_diffuse", diffuse);
+	shader->setUniform("u_light_specular", specular);
+	shader->setUniform("u_light_max_distance", max_distance);
+}

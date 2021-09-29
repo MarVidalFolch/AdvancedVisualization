@@ -17,6 +17,8 @@
 bool render_wireframe = false;
 Camera* Application::camera = nullptr;
 Application* Application::instance = NULL;
+Vector3 ambient_light = Vector3(0.2f, 0.2f, 0.2f);
+Shader* shader;
 
 Application::Application(int window_width, int window_height, SDL_Window* window)
 {
@@ -44,9 +46,16 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	camera->lookAt(Vector3(5.f, 5.f, 5.f), Vector3(0.f, 0.0f, 0.f), Vector3(0.f, 1.f, 0.f));
 	camera->setPerspective(45.f,window_width/(float)window_height,0.1f,10000.f); //set the projection, we want to be perspective
 
+	// Shader
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
+
 	{
-		StandardMaterial* mat = new PhongMaterial(Vector3(1.f, 1.f, 1.f), Vector3(1.f, 1.f, 1.f), Vector3(1.f, 1.f, 1.f), 1.0f);
-		SceneNode* node = new SceneNode("Visible node");
+		SceneNode* light = new Light(Vector3(10.0, 15.0, 0.0f), Vector4(1.f, 0.0f, 0.0f, 1.0f), Vector3(0.5f, 0.5f, 0.5f), Vector3(0.9f, 0.9f, 0.9f), 10.0);
+
+		StandardMaterial* mat = new PhongMaterial(Vector3(1.f, 1.f, 1.f), Vector3(1.f, 1.f, 1.f), Vector3(1.f, 1.f, 1.f), 1.0f, shader);
+		//StandardMaterial* mat = new TextureMaterial();
+
+		SceneNode* node = new ObjectNode();
 		node->mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
 		//node->model.scale(5, 5, 5);
 		node->material = mat;
@@ -56,6 +65,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 
 		//mat->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/normal.fs");
 		node_list.push_back(node);
+		node_list.push_back(light);
 	}
 	
 	//hide the cursor
@@ -78,12 +88,29 @@ void Application::render(void)
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
-	for (size_t i = 0; i < node_list.size(); i++) {
-		node_list[i]->material->setUniforms(camera, node_list[i]->model);
-		node_list[i]->render(camera);
+	shader->enable();
 
-		if(render_wireframe)
-			node_list[i]->renderWireframe(camera);
+	// Ambient light
+	shader->setUniform("u_ambient_light", ambient_light);
+
+	// Upload camera positon
+	shader->setUniform("u_camera_pos", camera->eye);
+
+	for (size_t i = 0; i < node_list.size(); i++) {
+		if (node_list[i]->type == SceneNodeTypes::OBJECT) {
+			node_list[i]->material->setUniforms(camera, node_list[i]->model);
+			node_list[i]->render(camera);
+		
+			if (render_wireframe)
+				node_list[i]->renderWireframe(camera);
+		}
+		else {
+			shader->enable();
+			Light* light = (Light*)node_list[i];
+			light->setUniforms(shader);
+		}
+		
+		
 	}
 
 	//Draw the floor grid

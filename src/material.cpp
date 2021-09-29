@@ -17,7 +17,7 @@ StandardMaterial::~StandardMaterial()
 void StandardMaterial::setUniforms(Camera* camera, Matrix44 model)
 {
 	//upload node uniforms
-	shader->enable();
+	//shader->enable();
 	shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
 	shader->setUniform("u_camera_position", camera->eye);
 	shader->setUniform("u_model", model);
@@ -89,9 +89,16 @@ TextureMaterial::TextureMaterial() {
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 }
 
-PhongMaterial::PhongMaterial(Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh) {
+PhongMaterial::PhongMaterial(Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh, Shader* shader) {
+	if (shader == NULL) {
+		this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
+	}
+	else {
+		this->shader = shader;
+	}
+
+
 	color = vec4(0.f, 0.f, 1.f, 1.f);
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
 
 	this->ka = ka;
 	this->kd = kd;
