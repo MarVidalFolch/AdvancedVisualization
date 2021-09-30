@@ -53,6 +53,6 @@ void main()
 	
 	vec4 light = vec4(ka_ia + kd_NdotL_id * ks_RdotV_is, 1.0);
 	
-	gl_FragColor = light * u_light_color * v_color;
+	gl_FragColor = light * u_light_color * u_color;
 	//gl_FragColor = vec4(1.0);
 }

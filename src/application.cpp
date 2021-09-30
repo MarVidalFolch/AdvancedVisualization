@@ -50,7 +50,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
 
 	{
-		SceneNode* light = new Light(Vector3(10.0, 15.0, 0.0f), Vector4(1.f, 0.0f, 0.0f, 1.0f), Vector3(0.5f, 0.5f, 0.5f), Vector3(0.9f, 0.9f, 0.9f), 10.0);
+		SceneNode* light = new Light(Vector3(10.0, 15.0, 0.0f), Vector4(1.f, 0.4f, 0.4f, 1.0f), Vector3(0.5f, 0.5f, 0.5f), Vector3(0.9f, 0.9f, 0.9f), 10.0);
 
 		StandardMaterial* mat = new PhongMaterial(Vector3(1.f, 1.f, 1.f), Vector3(1.f, 1.f, 1.f), Vector3(1.f, 1.f, 1.f), 1.0f, shader);
 		//StandardMaterial* mat = new TextureMaterial();
