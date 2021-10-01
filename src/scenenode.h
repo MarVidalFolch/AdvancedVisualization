@@ -50,6 +50,7 @@ public:
 
 	Light(Vector3 position, Vector4 color, Vector3 diffuse, Vector3 specular, float max_distance);
 	void setUniforms(Shader* shader);
+	void renderInMenu();
 };
 
 #endif

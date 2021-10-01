@@ -86,3 +86,12 @@ void Light::setUniforms(Shader* shader) {
 	shader->setUniform("u_light_specular", specular);
 	shader->setUniform("u_light_max_distance", max_distance);
 }
+
+void Light::renderInMenu() {
+	if (ImGui::TreeNode("Light Attributes")) {
+		ImGui::ColorEdit3("Color Light", (float*)&this->color);
+		ImGui::DragFloat3("Diffuse light",(float*)&this->diffuse, 0.05f, 0.0f, 1.0f);
+		ImGui::DragFloat3("Specular light", (float*)&this->specular, 0.05f, 0.0f, 1.0f);
+		ImGui::TreePop();
+	}
+}

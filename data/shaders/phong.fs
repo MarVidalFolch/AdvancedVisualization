@@ -14,11 +14,10 @@ uniform vec3 u_ambient_light;
 
 uniform vec3 u_camera_pos; // Hay que PASARLA 
 
-varying vec3 v_position;
+//varying vec3 v_position;
 varying vec3 v_world_position;
 varying vec3 v_normal;
-varying vec2 v_uv;
-varying vec4 v_color;
+//varying vec2 v_uv;
 
 
 void main()
@@ -51,7 +50,7 @@ void main()
 	// Specular light term
 	vec3 ks_RdotV_is = u_ks * pow(RdotV, u_alpha_sh) * u_light_specular;
 	
-	vec4 light = vec4(ka_ia + kd_NdotL_id * ks_RdotV_is, 1.0);
+	vec4 light = vec4(ka_ia + kd_NdotL_id + ks_RdotV_is, 1.0);
 	
 	gl_FragColor = light * u_light_color * u_color;
 	//gl_FragColor = vec4(1.0);
