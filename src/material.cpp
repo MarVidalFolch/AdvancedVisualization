@@ -118,6 +118,6 @@ void PhongMaterial::renderInMenu() {
 	ImGui::DragFloat3("Ambient reflection (ka)",(float*)&this->ka, 0.005f, 0.0f, 1.0f);
 	ImGui::DragFloat3("Diffuse reflection (kd)", (float*)&this->kd, 0.005f, 0.0f, 1.0f);
 	ImGui::DragFloat3("Specular reflection (ks)", (float*)&this->ks, 0.005f, 0.0f, 1.0f);
-	ImGui::DragFloat("Alpha shinning", (float*)&this->alpha_sh, 0.005f, 0.01f, 10.0f);
+	ImGui::DragFloat("Alpha shinning", (float*)&this->alpha_sh, 0.01f, 0.01f, 50.0f);
 
 }

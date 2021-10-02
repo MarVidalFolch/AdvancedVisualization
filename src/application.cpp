@@ -17,7 +17,7 @@
 bool render_wireframe = false;
 Camera* Application::camera = nullptr;
 Application* Application::instance = NULL;
-Vector3 ambient_light = Vector3(0.6f, 0.6f, 0.6f);
+Vector3 ambient_light;
 Shader* shader;
 
 Application::Application(int window_width, int window_height, SDL_Window* window)
@@ -50,18 +50,19 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
 
 	{
-		SceneNode* light = new Light(Vector3(10.0, 15.0, 0.0f), Vector4(1.f, 0.4f, 0.4f, 1.0f), Vector3(0.5f, 0.5f, 0.5f), Vector3(0.9f, 0.9f, 0.9f), 10.0);
+		ambient_light = Vector3(0.5f, 0.5f, 0.5f);
+		SceneNode* light = new Light(Vector3(0.0f, 15.0f, 0.0f), Vector4(0.5, 0.5f, 1.0f, 1.0f), Vector3(0.7f, 0.7f, 0.7f), Vector3(0.9f, 0.9f, 0.8f), 10.0);
 
-		StandardMaterial* mat = new PhongMaterial(Vector4(0.4f, 0.4f, 0.4f, 1.0f) ,Vector3(1.f, 1.f, 1.f), Vector3(1.f, 1.f, 1.f), Vector3(1.f, 1.f, 1.f), 1.0f, shader);
+		StandardMaterial* mat = new PhongMaterial(Vector4(1.0f, 1.0f, 1.0f, 1.0f) ,Vector3(0.4f, 0.4f, 0.4f), Vector3(0.3f, 0.3f, 0.3f), Vector3(0.9f, 0.9f, 0.9f), 15.0f, shader);
 		//StandardMaterial* mat = new TextureMaterial();
 
 		SceneNode* node = new ObjectNode();
 		node->mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
-		//node->model.scale(5, 5, 5);
+		node->model.scale(2, 2, 2);
 		node->material = mat;
 
 		// Loading Texture
-		node-> material->texture = Texture::Get("data/brdfLUT.png");
+		node-> material->texture = Texture::Get("data/blueNoise.png");
 
 		//mat->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/normal.fs");
 		node_list.push_back(node);

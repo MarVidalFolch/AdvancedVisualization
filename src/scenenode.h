@@ -37,7 +37,8 @@ public:
 
 class ObjectNode : public SceneNode {
 public:
-	ObjectNode();
+	ObjectNode(const char* name = "OBJECT NODE");
+
 };
 
 class Light : public SceneNode {
@@ -48,7 +49,7 @@ public:
 	float max_distance;
 	// Posar els parametres de la llum
 
-	Light(Vector3 position, Vector4 color, Vector3 diffuse, Vector3 specular, float max_distance);
+	Light(Vector3 position, Vector4 color, Vector3 diffuse, Vector3 specular, float max_distance, const char* name = "LIGHT NODE");
 	void setUniforms(Shader* shader);
 	void renderInMenu();
 };
