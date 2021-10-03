@@ -28,7 +28,7 @@ void StandardMaterial::setUniforms(Camera* camera, Matrix44 model)
 	shader->setUniform("u_exposure", Application::instance->scene_exposure);
 
 	if (texture)
-		shader->setUniform("u_texture", texture);
+		shader->setUniform("u_texture", texture);		
 }
 
 void StandardMaterial::render(Mesh* mesh, Matrix44 model, Camera* camera)
@@ -84,12 +84,19 @@ void WireframeMaterial::render(Mesh* mesh, Matrix44 model, Camera * camera)
 	}
 }
 
-TextureMaterial::TextureMaterial() {
+TextureMaterial::TextureMaterial(Texture* texture) {
+	if (texture) {
+		this->texture = texture;
+	}
+	else
+	{
+		this->texture = Texture::getWhiteTexture();
+	}
 	color = vec4(1.f, 1.f, 1.f, 1.f);
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 }
 
-PhongMaterial::PhongMaterial(Vector4 color, Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh, Shader* shader) {
+PhongMaterial::PhongMaterial(Vector4 color, Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh, Shader* shader, Texture* texture) : TextureMaterial(texture) {
 	if (shader == NULL) {
 		this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
 	}

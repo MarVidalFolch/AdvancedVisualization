@@ -53,16 +53,16 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		ambient_light = Vector3(0.5f, 0.5f, 0.5f);
 		SceneNode* light = new Light(Vector3(0.0f, 15.0f, 0.0f), Vector4(0.5, 0.5f, 1.0f, 1.0f), Vector3(0.7f, 0.7f, 0.7f), Vector3(0.9f, 0.9f, 0.8f), 10.0);
 
-		StandardMaterial* mat = new PhongMaterial(Vector4(1.0f, 1.0f, 1.0f, 1.0f) ,Vector3(0.4f, 0.4f, 0.4f), Vector3(0.3f, 0.3f, 0.3f), Vector3(0.9f, 0.9f, 0.9f), 15.0f, shader);
-		//StandardMaterial* mat = new TextureMaterial();
+		// Loading Texture
+		Texture* texture = Texture::Get("data/blueNoise.png");
+
+		StandardMaterial* mat = new PhongMaterial(Vector4(1.0f, 1.0f, 1.0f, 1.0f) ,Vector3(0.4f, 0.4f, 0.4f), Vector3(0.3f, 0.3f, 0.3f), Vector3(0.9f, 0.9f, 0.9f), 15.0f, shader, texture);
+		//StandardMaterial* mat = new TextureMaterial(texture);
 
 		SceneNode* node = new ObjectNode();
 		node->mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
 		node->model.scale(2, 2, 2);
 		node->material = mat;
-
-		// Loading Texture
-		node-> material->texture = Texture::Get("data/blueNoise.png");
 
 		//mat->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/normal.fs");
 		node_list.push_back(node);
@@ -99,7 +99,6 @@ void Application::render(void)
 
 	for (size_t i = 0; i < node_list.size(); i++) {
 		if (node_list[i]->type == SceneNodeTypes::OBJECT) {
-			node_list[i]->material->setUniforms(camera, node_list[i]->model);
 			node_list[i]->render(camera);
 		
 			if (render_wireframe)
