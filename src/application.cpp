@@ -17,7 +17,6 @@
 bool render_wireframe = false;
 Camera* Application::camera = nullptr;
 Application* Application::instance = NULL;
-Vector3 ambient_light;
 Shader* shader;
 
 Application::Application(int window_width, int window_height, SDL_Window* window)
