@@ -503,6 +503,16 @@ Texture* Texture::getBlackTexture()
 	return black;
 }
 
+Texture* Texture::getWhiteTexture()
+{
+	static Texture* white = NULL;
+	if (white)
+		return white;
+	const Uint8 data[3] = { 255,255,255 };
+	white = new Texture(1, 1, GL_RGB, GL_UNSIGNED_BYTE, true, (Uint8*)data);
+	return white;
+}
+
 void Texture::blit(Texture* destination, Shader* shader)
 {
 	FBO* fbo = getGlobalFBO(destination);

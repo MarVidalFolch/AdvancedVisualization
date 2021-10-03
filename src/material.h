@@ -41,19 +41,19 @@ public:
 
 class TextureMaterial : public StandardMaterial {
 public:
-	TextureMaterial();
-	~TextureMaterial();
+	TextureMaterial(Texture* texture = NULL);
 };
 
-class PhongMaterial : public StandardMaterial{
+class PhongMaterial : public TextureMaterial{
 public:
 	Vector3 ka;
 	Vector3 kd;
 	Vector3 ks;
 	float alpha_sh;
 
-	PhongMaterial(Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh, Shader* shader = NULL);
+	PhongMaterial(Vector4 color, Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh, Shader* shader = NULL, Texture* texture = NULL);
 	void setUniforms(Camera* camera, Matrix44 model);
+	void renderInMenu();
 
 };
 

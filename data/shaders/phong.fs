@@ -18,11 +18,14 @@ varying vec3 v_position;
 varying vec3 v_world_position;
 varying vec3 v_normal;
 varying vec2 v_uv;
-varying vec4 v_color;
 
 
 void main()
 {
+	// Texture
+	vec4 color_texture = texture2D(u_texture, v_uv);
+	
+	// Normal vector
 	vec3 N = normalize(v_normal);
 	
 	// Negative light vector
@@ -32,12 +35,11 @@ void main()
 	float NdotL = clamp(dot(N, L), 0.0, 1.0);
 	
 	// Reflected ray 
-	vec3 R = -reflect(L, N);
+	vec3 R = reflect(-L, N);
 	R = normalize(R);
 	
 	// Eye vector or camera vector
-	vec3 V = u_camera_pos - v_world_position;
-	V = normalize(V);
+	vec3 V = normalize(u_camera_pos - v_world_position);
 	
 	// R dot V
 	float RdotV = clamp(dot(R, V), 0.0, 1.0);
@@ -51,8 +53,7 @@ void main()
 	// Specular light term
 	vec3 ks_RdotV_is = u_ks * pow(RdotV, u_alpha_sh) * u_light_specular;
 	
-	vec4 light = vec4(ka_ia + kd_NdotL_id * ks_RdotV_is, 1.0);
+	vec4 light = vec4(ka_ia + kd_NdotL_id + ks_RdotV_is, 1.0);
 	
-	gl_FragColor = light * u_light_color * u_color;
-	//gl_FragColor = vec4(1.0);
+	gl_FragColor = light * u_light_color * u_color * color_texture;
 }

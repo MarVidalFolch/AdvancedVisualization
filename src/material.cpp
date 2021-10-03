@@ -28,7 +28,7 @@ void StandardMaterial::setUniforms(Camera* camera, Matrix44 model)
 	shader->setUniform("u_exposure", Application::instance->scene_exposure);
 
 	if (texture)
-		shader->setUniform("u_texture", texture);
+		shader->setUniform("u_texture", texture);		
 }
 
 void StandardMaterial::render(Mesh* mesh, Matrix44 model, Camera* camera)
@@ -84,12 +84,19 @@ void WireframeMaterial::render(Mesh* mesh, Matrix44 model, Camera * camera)
 	}
 }
 
-TextureMaterial::TextureMaterial() {
+TextureMaterial::TextureMaterial(Texture* texture) {
+	if (texture) {
+		this->texture = texture;
+	}
+	else
+	{
+		this->texture = Texture::getWhiteTexture();
+	}
 	color = vec4(1.f, 1.f, 1.f, 1.f);
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 }
 
-PhongMaterial::PhongMaterial(Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh, Shader* shader) {
+PhongMaterial::PhongMaterial(Vector4 color, Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh, Shader* shader, Texture* texture) : TextureMaterial(texture) {
 	if (shader == NULL) {
 		this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
 	}
@@ -98,7 +105,7 @@ PhongMaterial::PhongMaterial(Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh,
 	}
 
 
-	color = vec4(0.f, 0.f, 1.f, 1.f);
+	this->color = color;
 
 	this->ka = ka;
 	this->kd = kd;
@@ -112,4 +119,12 @@ void PhongMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	shader->setUniform("u_kd", kd);
 	shader->setUniform("u_ks", ks);
 	shader->setUniform("u_alpha_sh", alpha_sh);
+}
+
+void PhongMaterial::renderInMenu() {
+	ImGui::DragFloat3("Ambient reflection (ka)",(float*)&this->ka, 0.005f, 0.0f, 1.0f);
+	ImGui::DragFloat3("Diffuse reflection (kd)", (float*)&this->kd, 0.005f, 0.0f, 1.0f);
+	ImGui::DragFloat3("Specular reflection (ks)", (float*)&this->ks, 0.005f, 0.0f, 1.0f);
+	ImGui::DragFloat("Alpha shinning", (float*)&this->alpha_sh, 0.01f, 0.01f, 50.0f);
+
 }
