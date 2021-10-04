@@ -63,9 +63,22 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		node->model.scale(2, 2, 2);
 		node->material = mat;
 
+		// Skybox
+
+		Texture* texture_cube = new Texture();
+		texture_cube->cubemapFromImages("data/environments/city");
+
+		StandardMaterial* mat_cube = new TextureMaterial(texture_cube);
+		mat_cube->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/skybox.fs");
+
+		SceneNode* node_cube = new ObjectNode();
+		node_cube->mesh = Mesh::Get("data/meshes/box.ASE.mbin");
+		node_cube->material = mat_cube;
+
 		//mat->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/normal.fs");
 		node_list.push_back(node);
 		node_list.push_back(light);
+		node_list.push_back(node_cube);
 	}
 	
 	//hide the cursor
