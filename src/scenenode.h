@@ -12,6 +12,7 @@ class Light;
 
 enum class SceneNodeTypes {
 	OBJECT,
+	SKYBOX,
 	LIGHT
 };
 
@@ -52,6 +53,13 @@ public:
 	Light(Vector3 position, Vector4 color, Vector3 diffuse, Vector3 specular, float max_distance, const char* name = "LIGHT NODE");
 	void setUniforms(Shader* shader);
 	void renderInMenu();
+};
+
+class SkyboxNode : public SceneNode {
+public:
+	SkyboxNode(const char* name = "SKYBOX NODE");
+
+	void syncCameraPosition(Vector3 eye);
 };
 
 #endif

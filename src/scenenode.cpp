@@ -98,3 +98,12 @@ void Light::renderInMenu() {
 		ImGui::TreePop();
 	}
 }
+
+SkyboxNode::SkyboxNode(const char* name) {
+	type = SceneNodeTypes::SKYBOX;
+	this->name = name;
+}
+
+void SkyboxNode::syncCameraPosition(Vector3 eye) {
+	this->model.setTranslation(eye.x, eye.y, eye.z);
+}

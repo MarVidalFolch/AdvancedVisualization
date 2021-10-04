@@ -57,4 +57,9 @@ public:
 
 };
 
+class SkyboxMaterial : public TextureMaterial {
+public:
+	SkyboxMaterial(Texture* texture = NULL, Shader* shader = NULL);
+};
+
 #endif

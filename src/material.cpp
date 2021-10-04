@@ -128,3 +128,12 @@ void PhongMaterial::renderInMenu() {
 	ImGui::DragFloat("Alpha shinning", (float*)&this->alpha_sh, 0.01f, 0.01f, 50.0f);
 
 }
+
+SkyboxMaterial::SkyboxMaterial(Texture* texture, Shader* shader) : TextureMaterial(texture) {
+	if (shader == NULL) {
+		this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/skybox.fs");
+	}
+	else {
+		this->shader = shader;
+	}
+}

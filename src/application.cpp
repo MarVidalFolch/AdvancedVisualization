@@ -68,17 +68,17 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		Texture* texture_cube = new Texture();
 		texture_cube->cubemapFromImages("data/environments/city");
 
-		StandardMaterial* mat_cube = new TextureMaterial(texture_cube);
+		StandardMaterial* mat_cube = new SkyboxMaterial(texture_cube);
 		mat_cube->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/skybox.fs");
 
-		SceneNode* node_cube = new ObjectNode();
+		SceneNode* node_cube = new SkyboxNode();
 		node_cube->mesh = Mesh::Get("data/meshes/box.ASE.mbin");
 		node_cube->material = mat_cube;
 
 		//mat->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/normal.fs");
+		node_list.push_back(node_cube);
 		node_list.push_back(node);
 		node_list.push_back(light);
-		node_list.push_back(node_cube);
 	}
 	
 	//hide the cursor
@@ -106,20 +106,21 @@ void Application::render(void)
 	// Ambient light
 	shader->setUniform("u_ambient_light", ambient_light);
 
-	// Upload camera positon
-	shader->setUniform("u_camera_pos", camera->eye);
-
 	for (size_t i = 0; i < node_list.size(); i++) {
-		if (node_list[i]->type == SceneNodeTypes::OBJECT) {
-			node_list[i]->render(camera);
-		
-			if (render_wireframe)
-				node_list[i]->renderWireframe(camera);
-		}
-		else {
+		if(node_list[i]->type == SceneNodeTypes::LIGHT) {
 			shader->enable();
 			Light* light = (Light*)node_list[i];
 			light->setUniforms(shader);
+		}
+		else {
+			if (node_list[i]->type == SceneNodeTypes::SKYBOX) {
+				glDisable(GL_DEPTH_TEST);
+			}
+			node_list[i]->render(camera);
+			glEnable(GL_DEPTH_TEST);
+
+			if (render_wireframe)
+				node_list[i]->renderWireframe(camera);
 		}
 		
 		
@@ -140,6 +141,10 @@ void Application::update(double seconds_elapsed)
 	/*for (int i = 0; i < root.size(); i++) {
 		root[i]->model.rotate(angle, Vector3(0,1,0));
 	}*/
+
+	// Update skybox position
+	SkyboxNode* skybox = (SkyboxNode*)node_list[0];
+	skybox->syncCameraPosition(camera->eye);
 
 	//mouse input to rotate the cam
 	if ((Input::mouse_state & SDL_BUTTON_LEFT && !ImGui::IsAnyWindowHovered() 
