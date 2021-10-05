@@ -46,7 +46,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	camera->setPerspective(45.f,window_width/(float)window_height,0.1f,10000.f); //set the projection, we want to be perspective
 
 	// Shader
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
+	//shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
 
 	{
 		ambient_light = Vector3(0.5f, 0.5f, 0.5f);
@@ -55,7 +55,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		// Loading Texture
 		Texture* texture = Texture::Get("data/blueNoise.png");
 
-		StandardMaterial* mat = new PhongMaterial(Vector4(1.0f, 1.0f, 1.0f, 1.0f) ,Vector3(0.4f, 0.4f, 0.4f), Vector3(0.3f, 0.3f, 0.3f), Vector3(0.9f, 0.9f, 0.9f), 15.0f, shader, texture);
+		StandardMaterial* mat = new PhongMaterial(Vector4(1.0f, 1.0f, 1.0f, 1.0f) ,Vector3(0.4f, 0.4f, 0.4f), Vector3(0.3f, 0.3f, 0.3f), Vector3(0.9f, 0.9f, 0.9f), 15.0f, NULL, texture);
 		//StandardMaterial* mat = new TextureMaterial(texture);
 
 		SceneNode* node = new ObjectNode();
@@ -66,7 +66,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		// Skybox
 
 		Texture* texture_cube = new Texture();
-		texture_cube->cubemapFromImages("data/environments/city");
+		texture_cube->cubemapFromImages("data/environments/snow");
 
 		StandardMaterial* mat_cube = new SkyboxMaterial(texture_cube);
 		mat_cube->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/skybox.fs");
@@ -101,24 +101,20 @@ void Application::render(void)
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
-	shader->enable();
+	//shader->enable();
 
 	// Ambient light
-	shader->setUniform("u_ambient_light", ambient_light);
+	//shader->setUniform("u_ambient_light", ambient_light);
 
 	for (size_t i = 0; i < node_list.size(); i++) {
 		if(node_list[i]->type == SceneNodeTypes::LIGHT) {
-			shader->enable();
+			
 			Light* light = (Light*)node_list[i];
-			light->setUniforms(shader);
+			light->setUniforms();
 		}
 		else {
-			if (node_list[i]->type == SceneNodeTypes::SKYBOX) {
-				glDisable(GL_DEPTH_TEST);
-			}
 			node_list[i]->render(camera);
-			glEnable(GL_DEPTH_TEST);
-
+			
 			if (render_wireframe)
 				node_list[i]->renderWireframe(camera);
 		}

@@ -48,10 +48,9 @@ public:
 	Vector3 diffuse;
 	Vector3 specular;
 	float max_distance;
-	// Posar els parametres de la llum
-
+	Shader* shader;
 	Light(Vector3 position, Vector4 color, Vector3 diffuse, Vector3 specular, float max_distance, const char* name = "LIGHT NODE");
-	void setUniforms(Shader* shader);
+	void setUniforms();
 	void renderInMenu();
 };
 
@@ -60,6 +59,7 @@ public:
 	SkyboxNode(const char* name = "SKYBOX NODE");
 
 	void syncCameraPosition(Vector3 eye);
+	void render(Camera* camera);
 };
 
 #endif
