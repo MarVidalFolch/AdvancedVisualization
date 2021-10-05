@@ -59,7 +59,13 @@ public:
 
 class SkyboxMaterial : public TextureMaterial {
 public:
-	SkyboxMaterial(Texture* texture = NULL, Shader* shader = NULL);
+	std::vector<char*> folder_names = { "data/environments/snow", "data/environments/city", "data/environments/dragonvale"};
+	int folder_index;
+
+
+	SkyboxMaterial(char* folder_texture, Texture* texture = NULL, Shader* shader = NULL);
+	void renderInMenu();
+	void textureUpdate();
 };
 
 class ReflectionMaterial : public StandardMaterial {

@@ -2,6 +2,7 @@
 #include "texture.h"
 #include "application.h"
 #include "extra/hdre.h"
+#include "utils.h"
 
 StandardMaterial::StandardMaterial()
 {
@@ -129,14 +130,29 @@ void PhongMaterial::renderInMenu() {
 
 }
 
-SkyboxMaterial::SkyboxMaterial(Texture* texture, Shader* shader) : TextureMaterial(texture) {
+SkyboxMaterial::SkyboxMaterial(char* folder_texture, Texture* texture, Shader* shader) : TextureMaterial(texture) {
 	if (shader == NULL) {
 		this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/skybox.fs");
 	}
 	else {
 		this->shader = shader;
 	}
+	this->folder_index = getIndex(folder_names, folder_texture);
 }
+
+void SkyboxMaterial::renderInMenu() {
+	bool changed = false;
+	changed |= ImGui::Combo("Skybox texture", (int*)&this->folder_index, "SNOW\0CITY\0DRAGON");
+	if (changed) {
+		textureUpdate();
+	}
+
+}
+
+void SkyboxMaterial::textureUpdate() {
+	texture->cubemapFromImages(folder_names[folder_index]);
+}
+
 
 ReflectionMaterial::ReflectionMaterial(SkyboxMaterial* skybox){
 	this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/reflection.fs");

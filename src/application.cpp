@@ -72,10 +72,11 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		node_phong->material = mat_phong;
 
 		// Skybox
+		char* folder_name = "data/environments/snow";
 		Texture* texture_cube = new Texture();
-		texture_cube->cubemapFromImages("data/environments/snow");
+		texture_cube->cubemapFromImages((const char*)folder_name);
 
-		StandardMaterial* skybox_mat = new SkyboxMaterial(texture_cube);
+		StandardMaterial* skybox_mat = new SkyboxMaterial(folder_name, texture_cube);
 		skybox_mat->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/skybox.fs");
 
 		SceneNode* node_skybox = new SkyboxNode();

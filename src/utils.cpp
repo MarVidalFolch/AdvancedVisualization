@@ -478,3 +478,26 @@ char* fetchBufferVec4(char* data, std::vector<Vector4>& vector)
 	memcpy(&vector[0], &floats[0], sizeof(float)*floats.size());
 	return data;
 }
+
+
+// source: https://www.geeksforgeeks.org/how-to-find-index-of-a-given-element-in-a-vector-in-cpp/ 
+int getIndex(std::vector<char*>v, char* k) {
+	auto it = find(v.begin(), v.end(), k);
+
+	// If element was found
+	if (it != v.end())
+	{
+
+		// calculating the index
+		// of K
+		int index = it - v.begin();
+		//std::cout << index << std::endl;
+		return index;
+	}
+	else {
+		// If the element is not
+		// present in the vector
+		//std::cout << "-1" << std::endl;
+		return -1;
+	}
+}
