@@ -137,3 +137,7 @@ SkyboxMaterial::SkyboxMaterial(Texture* texture, Shader* shader) : TextureMateri
 		this->shader = shader;
 	}
 }
+
+ReflectionMaterial::ReflectionMaterial(SkyboxMaterial* skybox){
+	this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/reflection.fs");
+}

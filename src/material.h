@@ -62,4 +62,10 @@ public:
 	SkyboxMaterial(Texture* texture = NULL, Shader* shader = NULL);
 };
 
+class ReflectionMaterial : public StandardMaterial {
+public:
+	static SkyboxMaterial* skybox;
+	ReflectionMaterial(SkyboxMaterial* skybox);
+};
+
 #endif
