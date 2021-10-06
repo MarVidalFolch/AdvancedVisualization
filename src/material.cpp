@@ -3,6 +3,7 @@
 #include "application.h"
 #include "extra/hdre.h"
 #include "utils.h"
+SkyboxMaterial* ReflectionMaterial::skybox = NULL;
 
 StandardMaterial::StandardMaterial()
 {
@@ -156,4 +157,7 @@ void SkyboxMaterial::textureUpdate() {
 
 ReflectionMaterial::ReflectionMaterial(SkyboxMaterial* skybox){
 	this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/reflection.fs");
+	if (ReflectionMaterial::skybox == NULL) {
+		ReflectionMaterial::skybox = skybox;
+	}
 }
