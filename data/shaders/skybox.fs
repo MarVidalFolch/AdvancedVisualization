@@ -8,5 +8,5 @@ uniform vec3 u_camera_position;
 void main()
 {
     vec3 V = normalize(v_world_position - u_camera_position);
-    gl_FragColor = texture(u_texture, V);
+    gl_FragColor = textureCube(u_texture, V);
 }
