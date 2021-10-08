@@ -94,18 +94,49 @@ TextureMaterial::TextureMaterial(Texture* texture) {
 	{
 		this->texture = Texture::getWhiteTexture();
 	}
+
 	color = vec4(1.f, 1.f, 1.f, 1.f);
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 }
 
-PhongMaterial::PhongMaterial(Vector4 color, Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh, Shader* shader, Texture* texture) : TextureMaterial(texture) {
+
+TextureMaterial::TextureMaterial(char* folder_texture, Texture* texture) {
+	if (texture) {
+		this->texture = texture;
+	}
+	else
+	{
+		this->texture = Texture::getWhiteTexture();
+	}
+
+	this->folder_index_texture = getIndex(folder_names_texture, folder_texture);
+
+	color = vec4(1.f, 1.f, 1.f, 1.f);
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+}
+
+void TextureMaterial::renderInMenu() {
+	bool changed = false;
+	changed |= ImGui::Combo("Sphere texture", (int*)&this->folder_index_texture, "BLUE_NOISE\0brdfLUT\0ALEX_MAR\0");
+	if (changed){ 
+		textureUpdate();
+	}
+}
+
+void TextureMaterial::textureUpdate() {
+	if (folder_index_texture >= std::size(folder_names_texture)) {
+		texture = Texture::getWhiteTexture();
+	}
+	texture = Texture::Get(folder_names_texture[folder_index_texture]);
+}
+
+PhongMaterial::PhongMaterial(char* folder_names_texture, Vector4 color, Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh, Shader* shader, Texture* texture) : TextureMaterial(texture) {
 	if (shader == NULL) {
 		this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
 	}
 	else {
 		this->shader = shader;
 	}
-
 
 	this->color = color;
 
@@ -129,6 +160,11 @@ void PhongMaterial::renderInMenu() {
 	ImGui::DragFloat3("Specular reflection (ks)", (float*)&this->ks, 0.005f, 0.0f, 1.0f);
 	ImGui::DragFloat("Alpha shinning", (float*)&this->alpha_sh, 0.01f, 0.01f, 50.0f);
 
+	bool changed = false;
+	changed |= ImGui::Combo("Sphere texture", (int*)&this->folder_index_texture, "BLUE_NOISE\0brdfLUT\0ALEX_MAR\0");
+	if (changed) {
+		textureUpdate();
+	}
 }
 
 SkyboxMaterial::SkyboxMaterial(char* folder_texture, Texture* texture, Shader* shader) : TextureMaterial(texture) {
@@ -145,12 +181,12 @@ void SkyboxMaterial::renderInMenu() {
 	bool changed = false;
 	changed |= ImGui::Combo("Skybox texture", (int*)&this->folder_index, "SNOW\0CITY\0DRAGON");
 	if (changed) {
-		textureUpdate();
+		textureSkyboxUpdate();
 	}
 
 }
 
-void SkyboxMaterial::textureUpdate() {
+void SkyboxMaterial::textureSkyboxUpdate() {
 	texture->cubemapFromImages(folder_names[folder_index]);
 }
 
@@ -161,3 +197,4 @@ ReflectionMaterial::ReflectionMaterial(SkyboxMaterial* skybox){
 		ReflectionMaterial::skybox = skybox;
 	}
 }
+

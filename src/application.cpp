@@ -53,20 +53,21 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		SceneNode* light = new Light(Vector3(0.0f, 15.0f, 0.0f), Vector4(0.5, 0.5f, 1.0f, 1.0f), Vector3(0.7f, 0.7f, 0.7f), Vector3(0.9f, 0.9f, 0.8f), 10.0);
 
 		// Texture Sphere
-		Texture* texture = Texture::Get("data/blueNoise.png");
+		char* filename = "data/blueNoise.png";
+		Texture* texture = Texture::Get(filename);
 
-		StandardMaterial* mat_texture = new TextureMaterial(texture);
+		StandardMaterial* mat_texture = new TextureMaterial(filename, texture);
 		
-		SceneNode* node_texture = new ObjectNode();
+		SceneNode* node_texture = new ObjectNode("texture_sphere");
 		node_texture->mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
 		node_texture->model.scale(2, 2, 2);
 		node_texture->model.setTranslation(-5, 0, 0);
 		node_texture->material = mat_texture;
 
 		// Phong Sphere
-		StandardMaterial* mat_phong = new PhongMaterial(Vector4(1.0f, 1.0f, 1.0f, 1.0f) ,Vector3(0.4f, 0.4f, 0.4f), Vector3(0.3f, 0.3f, 0.3f), Vector3(0.9f, 0.9f, 0.9f), 15.0f, NULL, texture);
+		StandardMaterial* mat_phong = new PhongMaterial(filename, Vector4(1.0f, 1.0f, 1.0f, 1.0f) ,Vector3(0.4f, 0.4f, 0.4f), Vector3(0.3f, 0.3f, 0.3f), Vector3(0.9f, 0.9f, 0.9f), 15.0f, NULL, texture);
 
-		SceneNode* node_phong = new ObjectNode();
+		SceneNode* node_phong = new ObjectNode("phong_sphere");
 		node_phong->mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
 		node_phong->model.scale(2, 2, 2);
 		node_phong->material = mat_phong;
@@ -79,14 +80,14 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		StandardMaterial* skybox_mat = new SkyboxMaterial(folder_name, texture_cube);
 		skybox_mat->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/skybox.fs");
 
-		SceneNode* node_skybox = new SkyboxNode();
+		SceneNode* node_skybox = new SkyboxNode("skybox");
 		node_skybox->mesh = Mesh::Get("data/meshes/box.ASE.mbin");
 		node_skybox->material = skybox_mat;
 
 		// Reflection Sphere
 		StandardMaterial* mat_mirror = new ReflectionMaterial((SkyboxMaterial*)skybox_mat);
 		
-		SceneNode* node_mirror = new ObjectNode();
+		SceneNode* node_mirror = new ObjectNode("mirror_sphere");
 		node_mirror->mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
 		node_mirror->model.scale(2, 2, 2);
 		node_mirror->model.setTranslation(5, 0, 0);

@@ -41,7 +41,13 @@ public:
 
 class TextureMaterial : public StandardMaterial {
 public:
+	std::vector<char*> folder_names_texture = { "data/blueNoise.png", "data/brdfLUT.png", "data/alex_mar.png" };
+	int folder_index_texture;
+	
 	TextureMaterial(Texture* texture = NULL);
+	TextureMaterial(char* folder_texture, Texture* texture = NULL);
+	void renderInMenu();
+	void textureUpdate();
 };
 
 class PhongMaterial : public TextureMaterial{
@@ -51,7 +57,7 @@ public:
 	Vector3 ks;
 	float alpha_sh;
 
-	PhongMaterial(Vector4 color, Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh, Shader* shader = NULL, Texture* texture = NULL);
+	PhongMaterial(char* folder_names_texture, Vector4 color, Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh, Shader* shader = NULL, Texture* texture = NULL);
 	void setUniforms(Camera* camera, Matrix44 model);
 	void renderInMenu();
 
@@ -65,7 +71,7 @@ public:
 
 	SkyboxMaterial(char* folder_texture, Texture* texture = NULL, Shader* shader = NULL);
 	void renderInMenu();
-	void textureUpdate();
+	void textureSkyboxUpdate();
 };
 
 class ReflectionMaterial : public StandardMaterial {
