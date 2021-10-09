@@ -17,6 +17,7 @@
 bool render_wireframe = false;
 Camera* Application::camera = nullptr;
 Application* Application::instance = NULL;
+SceneNode* light;
 Shader* shader;
 
 Application::Application(int window_width, int window_height, SDL_Window* window)
@@ -46,26 +47,63 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	camera->setPerspective(45.f,window_width/(float)window_height,0.1f,10000.f); //set the projection, we want to be perspective
 
 	// Shader
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
+	//shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
 
 	{
 		ambient_light = Vector3(0.5f, 0.5f, 0.5f);
-		SceneNode* light = new Light(Vector3(0.0f, 15.0f, 0.0f), Vector4(0.5, 0.5f, 1.0f, 1.0f), Vector3(0.7f, 0.7f, 0.7f), Vector3(0.9f, 0.9f, 0.8f), 10.0);
+		light = new Light(Vector3(0.0f, 15.0f, 0.0f), Vector4(0.5, 0.5f, 1.0f, 1.0f), Vector3(0.7f, 0.7f, 0.7f), Vector3(0.9f, 0.9f, 0.8f), 10.0);
 
-		// Loading Texture
-		Texture* texture = Texture::Get("data/blueNoise.png");
+		// Texture Sphere
+		char* filename_texture = "data/blueNoise.png";
+		Texture* texture = Texture::Get(filename_texture);
 
-		StandardMaterial* mat = new PhongMaterial(Vector4(1.0f, 1.0f, 1.0f, 1.0f) ,Vector3(0.4f, 0.4f, 0.4f), Vector3(0.3f, 0.3f, 0.3f), Vector3(0.9f, 0.9f, 0.9f), 15.0f, shader, texture);
-		//StandardMaterial* mat = new TextureMaterial(texture);
+		StandardMaterial* mat_texture = new TextureMaterial(filename_texture, texture);
+		
+		SceneNode* node_texture = new ObjectNode("texture_sphere");
+		node_texture->mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
+		node_texture->model.setTranslation(-5, 0, 0);
+		node_texture->model.scale(2, 2, 2);
+		node_texture->material = mat_texture;
 
-		SceneNode* node = new ObjectNode();
-		node->mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
-		node->model.scale(2, 2, 2);
-		node->material = mat;
+		// Phong Sphere
+		StandardMaterial* mat_phong = new PhongMaterial(filename_texture, Vector4(1.0f, 1.0f, 1.0f, 1.0f) ,Vector3(0.4f, 0.4f, 0.4f), Vector3(0.3f, 0.3f, 0.3f), Vector3(0.9f, 0.9f, 0.9f), 15.0f, NULL, texture);
+
+		SceneNode* node_phong = new PhongNode("phong_sphere");
+		node_phong->mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
+		node_phong->model.scale(2, 2, 2);
+		node_phong->material = mat_phong;
+
+		// Skybox
+		char* folder_name = "data/environments/snow";
+		Texture* texture_cube = new Texture();
+		texture_cube->cubemapFromImages((const char*)folder_name);
+
+		StandardMaterial* skybox_mat = new SkyboxMaterial(folder_name, texture_cube);
+		skybox_mat->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/skybox.fs");
+
+		SceneNode* node_skybox = new SkyboxNode("skybox");
+		node_skybox->mesh = Mesh::Get("data/meshes/box.ASE.mbin");
+		node_skybox->material = skybox_mat;
+		node_skybox->model.setTranslation(camera->eye.x, camera->eye.y, camera->eye.z);
+
+		// Reflection Sphere
+		StandardMaterial* mat_mirror = new ReflectionMaterial((SkyboxMaterial*)skybox_mat);
+		
+		SceneNode* node_mirror = new ObjectNode("mirror_sphere");
+		node_mirror->mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
+		node_mirror->model.setTranslation(5, 0, 0);
+		node_mirror->model.scale(2, 2, 2);
+		node_mirror->material = mat_mirror;
+
+
 
 		//mat->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/normal.fs");
-		node_list.push_back(node);
+		node_list.push_back(node_skybox);
+		node_list.push_back(node_phong);
+		node_list.push_back(node_mirror);
+		node_list.push_back(node_texture);
 		node_list.push_back(light);
+		
 	}
 	
 	//hide the cursor
@@ -88,25 +126,16 @@ void Application::render(void)
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
-	shader->enable();
-
-	// Ambient light
-	shader->setUniform("u_ambient_light", ambient_light);
-
-	// Upload camera positon
-	shader->setUniform("u_camera_pos", camera->eye);
-
 	for (size_t i = 0; i < node_list.size(); i++) {
-		if (node_list[i]->type == SceneNodeTypes::OBJECT) {
+		if(node_list[i]->type == SceneNodeTypes::PHONGNODE) {
+			PhongNode* node_phong = (PhongNode*)node_list[i];
+			node_phong->render(camera, (Light*)light);
+		}
+		else if(node_list[i]->type != SceneNodeTypes::LIGHT){
 			node_list[i]->render(camera);
-		
+			
 			if (render_wireframe)
 				node_list[i]->renderWireframe(camera);
-		}
-		else {
-			shader->enable();
-			Light* light = (Light*)node_list[i];
-			light->setUniforms(shader);
 		}
 		
 		
@@ -127,6 +156,10 @@ void Application::update(double seconds_elapsed)
 	/*for (int i = 0; i < root.size(); i++) {
 		root[i]->model.rotate(angle, Vector3(0,1,0));
 	}*/
+
+	// Update skybox position
+	SkyboxNode* skybox = (SkyboxNode*)node_list[0];
+	skybox->syncCameraPosition(camera->eye);
 
 	//mouse input to rotate the cam
 	if ((Input::mouse_state & SDL_BUTTON_LEFT && !ImGui::IsAnyWindowHovered() 

@@ -2,6 +2,8 @@
 #include "texture.h"
 #include "application.h"
 #include "extra/hdre.h"
+#include "utils.h"
+SkyboxMaterial* ReflectionMaterial::skybox = NULL;
 
 StandardMaterial::StandardMaterial()
 {
@@ -27,7 +29,7 @@ void StandardMaterial::setUniforms(Camera* camera, Matrix44 model)
 	shader->setUniform("u_color", color);
 	shader->setUniform("u_exposure", Application::instance->scene_exposure);
 
-	if (texture)
+	if (texture!=NULL)
 		shader->setUniform("u_texture", texture);		
 }
 
@@ -92,18 +94,50 @@ TextureMaterial::TextureMaterial(Texture* texture) {
 	{
 		this->texture = Texture::getWhiteTexture();
 	}
+
 	color = vec4(1.f, 1.f, 1.f, 1.f);
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 }
 
-PhongMaterial::PhongMaterial(Vector4 color, Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh, Shader* shader, Texture* texture) : TextureMaterial(texture) {
+
+TextureMaterial::TextureMaterial(char* filename_texture, Texture* texture) {
+	if (texture) {
+		this->texture = texture;
+	}
+	else
+	{
+		this->texture = Texture::getWhiteTexture();
+	}
+
+	this->filename_index_texture = getIndex(filenames_texture, filename_texture);
+
+	color = vec4(1.f, 1.f, 1.f, 1.f);
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+}
+
+void TextureMaterial::renderInMenu() {
+	bool changed = false;
+	changed |= ImGui::Combo("Sphere texture", (int*)&this->filename_index_texture, "BLUE_NOISE\0brdfLUT\0ALEX_MAR\0WHITE\0");
+	if (changed){ 
+		textureUpdate();
+	}
+}
+
+void TextureMaterial::textureUpdate() {
+	if (filename_index_texture >= std::size(filenames_texture)) {
+		texture = Texture::getWhiteTexture();
+		return;
+	}
+	texture = Texture::Get(filenames_texture[filename_index_texture]);
+}
+
+PhongMaterial::PhongMaterial(char* filename_texture, Vector4 color, Vector3 ka, Vector3 kd, Vector3 ks, float alpha_sh, Shader* shader, Texture* texture) : TextureMaterial(filename_texture, texture) {
 	if (shader == NULL) {
 		this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
 	}
 	else {
 		this->shader = shader;
 	}
-
 
 	this->color = color;
 
@@ -127,4 +161,44 @@ void PhongMaterial::renderInMenu() {
 	ImGui::DragFloat3("Specular reflection (ks)", (float*)&this->ks, 0.005f, 0.0f, 1.0f);
 	ImGui::DragFloat("Alpha shinning", (float*)&this->alpha_sh, 0.01f, 0.01f, 50.0f);
 
+	TextureMaterial::renderInMenu();
+}
+
+SkyboxMaterial::SkyboxMaterial(char* folder_texture, Texture* texture, Shader* shader) : TextureMaterial(texture) {
+	if (shader == NULL) {
+		this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/skybox.fs");
+	}
+	else {
+		this->shader = shader;
+	}
+	this->folder_index = getIndex(folder_names, folder_texture);
+}
+
+void SkyboxMaterial::renderInMenu() {
+	bool changed = false;
+	changed |= ImGui::Combo("Skybox texture", (int*)&this->folder_index, "SNOW\0CITY\0DRAGON");
+	if (changed) {
+		textureSkyboxUpdate();
+	}
+
+}
+
+void SkyboxMaterial::textureSkyboxUpdate() {
+	texture->cubemapFromImages(folder_names[folder_index]);
+}
+
+
+ReflectionMaterial::ReflectionMaterial(SkyboxMaterial* skybox){
+	this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/reflection.fs");
+	if (ReflectionMaterial::skybox == NULL) {
+		ReflectionMaterial::skybox = skybox;
+	}
+}
+
+void ReflectionMaterial::setUniforms(Camera* camera, Matrix44 model)
+{
+	StandardMaterial::setUniforms(camera, model);
+
+	if (ReflectionMaterial::skybox != NULL)
+		shader->setUniform("u_texture", skybox->texture);
 }

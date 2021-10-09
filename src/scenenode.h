@@ -12,6 +12,8 @@ class Light;
 
 enum class SceneNodeTypes {
 	OBJECT,
+	PHONGNODE,
+	SKYBOX,
 	LIGHT
 };
 
@@ -41,17 +43,31 @@ public:
 
 };
 
+class PhongNode : public SceneNode {
+public:
+	PhongNode(const char* name = "PHONG NODE");
+
+	void render(Camera* camera, Light* light);
+};
+
 class Light : public SceneNode {
 public:
 	Vector4 color;
 	Vector3 diffuse;
 	Vector3 specular;
 	float max_distance;
-	// Posar els parametres de la llum
-
+	Shader* shader;
 	Light(Vector3 position, Vector4 color, Vector3 diffuse, Vector3 specular, float max_distance, const char* name = "LIGHT NODE");
-	void setUniforms(Shader* shader);
+	void setUniforms();
 	void renderInMenu();
+};
+
+class SkyboxNode : public SceneNode {
+public:
+	SkyboxNode(const char* name = "SKYBOX NODE");
+
+	void syncCameraPosition(Vector3 eye);
+	void render(Camera* camera);
 };
 
 #endif

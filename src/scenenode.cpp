@@ -71,6 +71,16 @@ ObjectNode::ObjectNode(const char* name) {
 	this->name = name;
 }
 
+PhongNode::PhongNode(const char* name) {
+	type = SceneNodeTypes::PHONGNODE;
+	this->name = name;
+}
+
+void PhongNode::render(Camera* camera, Light* light) {
+	light->setUniforms();
+	SceneNode::render(camera);
+}
+
 Light::Light(Vector3 position, Vector4 color, Vector3 diffuse, Vector3 specular, float max_distance, const char* name) {
 	this->name = name;
 	type = SceneNodeTypes::LIGHT;
@@ -79,22 +89,43 @@ Light::Light(Vector3 position, Vector4 color, Vector3 diffuse, Vector3 specular,
 	this->diffuse = diffuse;
 	this->specular = specular;
 	this->max_distance = max_distance;
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
 }
 
-void Light::setUniforms(Shader* shader) {
+void Light::setUniforms() {
+	shader->enable();
 	shader->setUniform("u_light_pos", model.getTranslation());
 	shader->setUniform("u_light_color", color);
 	shader->setUniform("u_light_diffuse", diffuse);
 	shader->setUniform("u_light_specular", specular);
 	shader->setUniform("u_light_max_distance", max_distance);
+	shader->setUniform("u_ambient_light", Application::instance->ambient_light);
+	shader->disable();
 }
 
 void Light::renderInMenu() {
 	SceneNode::renderInMenu();
 	if (ImGui::TreeNode("Light Attributes")) {
 		ImGui::ColorEdit3("Color Light", (float*)&this->color);
-		ImGui::DragFloat3("Diffuse light",(float*)&this->diffuse, 0.05f, 0.0f, 1.0f);
-		ImGui::DragFloat3("Specular light", (float*)&this->specular, 0.05f, 0.0f, 1.0f);
+		ImGui::DragFloat3("Diffuse light",(float*)&this->diffuse, 0.005f, 0.0f, 1.0f);
+		ImGui::DragFloat3("Specular light", (float*)&this->specular, 0.005f, 0.0f, 1.0f);
 		ImGui::TreePop();
 	}
+}
+
+SkyboxNode::SkyboxNode(const char* name) {
+	type = SceneNodeTypes::SKYBOX;
+	this->name = name;
+}
+
+void SkyboxNode::syncCameraPosition(Vector3 eye) {
+	this->model.setTranslation(eye.x, eye.y, eye.z);
+}
+
+void SkyboxNode::render(Camera* camera) {
+	glDisable(GL_DEPTH_TEST);
+
+	SceneNode::render(camera);
+
+	glEnable(GL_DEPTH_TEST);
 }

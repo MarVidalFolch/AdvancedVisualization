@@ -12,7 +12,7 @@ uniform vec3 u_light_pos;
 uniform float u_light_max_distance;
 uniform vec3 u_ambient_light;
 
-uniform vec3 u_camera_pos; // Hay que PASARLA 
+uniform vec3 u_camera_position;
 
 varying vec3 v_position;
 varying vec3 v_world_position;
@@ -39,7 +39,7 @@ void main()
 	R = normalize(R);
 	
 	// Eye vector or camera vector
-	vec3 V = normalize(u_camera_pos - v_world_position);
+	vec3 V = normalize(u_camera_position - v_world_position);
 	
 	// R dot V
 	float RdotV = clamp(dot(R, V), 0.0, 1.0);
