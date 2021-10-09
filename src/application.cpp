@@ -17,6 +17,7 @@
 bool render_wireframe = false;
 Camera* Application::camera = nullptr;
 Application* Application::instance = NULL;
+SceneNode* light;
 Shader* shader;
 
 Application::Application(int window_width, int window_height, SDL_Window* window)
@@ -50,7 +51,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 
 	{
 		ambient_light = Vector3(0.5f, 0.5f, 0.5f);
-		SceneNode* light = new Light(Vector3(0.0f, 15.0f, 0.0f), Vector4(0.5, 0.5f, 1.0f, 1.0f), Vector3(0.7f, 0.7f, 0.7f), Vector3(0.9f, 0.9f, 0.8f), 10.0);
+		light = new Light(Vector3(0.0f, 15.0f, 0.0f), Vector4(0.5, 0.5f, 1.0f, 1.0f), Vector3(0.7f, 0.7f, 0.7f), Vector3(0.9f, 0.9f, 0.8f), 10.0);
 
 		// Texture Sphere
 		char* filename_texture = "data/blueNoise.png";
@@ -67,7 +68,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		// Phong Sphere
 		StandardMaterial* mat_phong = new PhongMaterial(filename_texture, Vector4(1.0f, 1.0f, 1.0f, 1.0f) ,Vector3(0.4f, 0.4f, 0.4f), Vector3(0.3f, 0.3f, 0.3f), Vector3(0.9f, 0.9f, 0.9f), 15.0f, NULL, texture);
 
-		SceneNode* node_phong = new ObjectNode("phong_sphere");
+		SceneNode* node_phong = new PhongNode("phong_sphere");
 		node_phong->mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
 		node_phong->model.scale(2, 2, 2);
 		node_phong->material = mat_phong;
@@ -83,6 +84,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		SceneNode* node_skybox = new SkyboxNode("skybox");
 		node_skybox->mesh = Mesh::Get("data/meshes/box.ASE.mbin");
 		node_skybox->material = skybox_mat;
+		node_skybox->model.setTranslation(camera->eye.x, camera->eye.y, camera->eye.z);
 
 		// Reflection Sphere
 		StandardMaterial* mat_mirror = new ReflectionMaterial((SkyboxMaterial*)skybox_mat);
@@ -124,18 +126,12 @@ void Application::render(void)
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
-	//shader->enable();
-
-	// Ambient light
-	//shader->setUniform("u_ambient_light", ambient_light);
-
 	for (size_t i = 0; i < node_list.size(); i++) {
-		if(node_list[i]->type == SceneNodeTypes::LIGHT) {
-			
-			Light* light = (Light*)node_list[i];
-			light->setUniforms();
+		if(node_list[i]->type == SceneNodeTypes::PHONGNODE) {
+			PhongNode* node_phong = (PhongNode*)node_list[i];
+			node_phong->render(camera, (Light*)light);
 		}
-		else {
+		else if(node_list[i]->type != SceneNodeTypes::LIGHT){
 			node_list[i]->render(camera);
 			
 			if (render_wireframe)

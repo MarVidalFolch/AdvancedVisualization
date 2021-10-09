@@ -71,6 +71,16 @@ ObjectNode::ObjectNode(const char* name) {
 	this->name = name;
 }
 
+PhongNode::PhongNode(const char* name) {
+	type = SceneNodeTypes::PHONGNODE;
+	this->name = name;
+}
+
+void PhongNode::render(Camera* camera, Light* light) {
+	light->setUniforms();
+	SceneNode::render(camera);
+}
+
 Light::Light(Vector3 position, Vector4 color, Vector3 diffuse, Vector3 specular, float max_distance, const char* name) {
 	this->name = name;
 	type = SceneNodeTypes::LIGHT;
@@ -97,8 +107,8 @@ void Light::renderInMenu() {
 	SceneNode::renderInMenu();
 	if (ImGui::TreeNode("Light Attributes")) {
 		ImGui::ColorEdit3("Color Light", (float*)&this->color);
-		ImGui::DragFloat3("Diffuse light",(float*)&this->diffuse, 0.05f, 0.0f, 1.0f);
-		ImGui::DragFloat3("Specular light", (float*)&this->specular, 0.05f, 0.0f, 1.0f);
+		ImGui::DragFloat3("Diffuse light",(float*)&this->diffuse, 0.005f, 0.0f, 1.0f);
+		ImGui::DragFloat3("Specular light", (float*)&this->specular, 0.005f, 0.0f, 1.0f);
 		ImGui::TreePop();
 	}
 }
