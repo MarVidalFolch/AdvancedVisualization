@@ -81,4 +81,16 @@ public:
 	void setUniforms(Camera* camera, Matrix44 model);
 };
 
+
+class PBRMaterial : public TextureMaterial {
+public:
+	
+	PBRMaterial(char* filename_texture, Texture* texture = NULL);
+	void renderInMenu();
+	void textureUpdate();
+};
+
+
+
+
 #endif

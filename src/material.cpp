@@ -202,3 +202,13 @@ void ReflectionMaterial::setUniforms(Camera* camera, Matrix44 model)
 	if (ReflectionMaterial::skybox != NULL)
 		shader->setUniform("u_texture", skybox->texture);
 }
+
+PBRMaterial::PBRMaterial(char* filename_texture, Texture* texture) : TextureMaterial(texture) {
+	if (shader == NULL) {
+		this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/skybox.fs");
+	}
+	else {
+		this->shader = shader;
+	}
+	//this->folder_index = getIndex(folder_names, folder_texture);
+}

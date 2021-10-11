@@ -53,11 +53,9 @@ public:
 class Light : public SceneNode {
 public:
 	Vector4 color;
-	Vector3 diffuse;
-	Vector3 specular;
-	float max_distance;
+	Vector3 intensity;
 	Shader* shader;
-	Light(Vector3 position, Vector4 color, Vector3 diffuse, Vector3 specular, float max_distance, const char* name = "LIGHT NODE");
+	Light(Vector3 position, Vector4 color, Vector3 intensity, const char* name = "LIGHT NODE");
 	void setUniforms();
 	void renderInMenu();
 };

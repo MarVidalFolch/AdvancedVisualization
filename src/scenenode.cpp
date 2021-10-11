@@ -81,24 +81,20 @@ void PhongNode::render(Camera* camera, Light* light) {
 	SceneNode::render(camera);
 }
 
-Light::Light(Vector3 position, Vector4 color, Vector3 diffuse, Vector3 specular, float max_distance, const char* name) {
+Light::Light(Vector3 position, Vector4 color, Vector3 intensity, const char* name) {
 	this->name = name;
 	type = SceneNodeTypes::LIGHT;
 	this->model.setTranslation(position.x, position.y, position.z);
 	this->color = color;
-	this->diffuse = diffuse;
-	this->specular = specular;
-	this->max_distance = max_distance;
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs");
+	this->intensity = intensity;	
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs"); // CANVIAR SHADER
 }
 
 void Light::setUniforms() {
 	shader->enable();
 	shader->setUniform("u_light_pos", model.getTranslation());
 	shader->setUniform("u_light_color", color);
-	shader->setUniform("u_light_diffuse", diffuse);
-	shader->setUniform("u_light_specular", specular);
-	shader->setUniform("u_light_max_distance", max_distance);
+	shader->setUniform("u_light_intensity", intensity);
 	shader->setUniform("u_ambient_light", Application::instance->ambient_light);
 	shader->disable();
 }
@@ -107,8 +103,7 @@ void Light::renderInMenu() {
 	SceneNode::renderInMenu();
 	if (ImGui::TreeNode("Light Attributes")) {
 		ImGui::ColorEdit3("Color Light", (float*)&this->color);
-		ImGui::DragFloat3("Diffuse light",(float*)&this->diffuse, 0.005f, 0.0f, 1.0f);
-		ImGui::DragFloat3("Specular light", (float*)&this->specular, 0.005f, 0.0f, 1.0f);
+		ImGui::DragFloat3("Intensity light",(float*)&this->intensity, 0.005f, 0.0f, 1.0f);
 		ImGui::TreePop();
 	}
 }
