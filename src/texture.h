@@ -17,6 +17,13 @@ class Texture;
 class HDRE;
 class Volume;
 
+enum class TextureSlots {
+	ALBEDO = 0,
+	NORMAL = 1,
+	ROUGHNESS = 2,
+	METALNESS = 3
+};
+
 //Simple class to handle images (stores RGBA always)
 class Image
 {

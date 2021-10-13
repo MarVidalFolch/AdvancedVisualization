@@ -30,7 +30,7 @@ void StandardMaterial::setUniforms(Camera* camera, Matrix44 model)
 	shader->setUniform("u_exposure", Application::instance->scene_exposure);
 
 	if (texture!=NULL)
-		shader->setUniform("u_texture", texture);		
+		shader->setUniform("u_texture", texture, (int)TextureSlots::ALBEDO);
 }
 
 void StandardMaterial::render(Mesh* mesh, Matrix44 model, Camera* camera)
@@ -204,11 +204,23 @@ void ReflectionMaterial::setUniforms(Camera* camera, Matrix44 model)
 }
 
 PBRMaterial::PBRMaterial(char* filename_texture, Texture* texture) : TextureMaterial(texture) {
-	if (shader == NULL) {
-		this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/skybox.fs");
-	}
-	else {
-		this->shader = shader;
-	}
+	this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/pbr.fs");
+	
 	//this->folder_index = getIndex(folder_names, folder_texture);
+}
+
+PBRMaterial::PBRMaterial(float roughness_factor, float metalness_factor) {
+	this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/pbr.fs");
+	
+	this->roughness_factor = roughness_factor;
+	this->metalness_factor= metalness_factor;
+
+}
+
+void PBRMaterial::setUniforms(Camera* camera, Matrix44 model) {
+	StandardMaterial::setUniforms(camera, model);
+	shader->setUniform("u_roughness_texture", roughness_texture, (int)TextureSlots::ROUGHNESS);
+	shader->setUniform("u_metalness_texture", metalness_texture, (int)TextureSlots::METALNESS);
+	shader->setUniform("u_roughness_factor", roughness_factor);
+	shader->setUniform("u_metalness_factor", metalness_factor);
 }

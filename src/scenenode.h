@@ -12,7 +12,7 @@ class Light;
 
 enum class SceneNodeTypes {
 	OBJECT,
-	PHONGNODE,
+	PBRNODE,
 	SKYBOX,
 	LIGHT
 };
@@ -43,9 +43,9 @@ public:
 
 };
 
-class PhongNode : public SceneNode {
+class PBRNode : public SceneNode {
 public:
-	PhongNode(const char* name = "PHONG NODE");
+	PBRNode(const char* name = "PBR NODE");
 
 	void render(Camera* camera, Light* light);
 };

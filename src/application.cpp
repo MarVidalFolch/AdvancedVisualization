@@ -17,6 +17,7 @@
 bool render_wireframe = false;
 Camera* Application::camera = nullptr;
 Application* Application::instance = NULL;
+Light* light;
 
 
 Application::Application(int window_width, int window_height, SDL_Window* window)
@@ -49,12 +50,28 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	ambient_light = Vector3(0.5f, 0.5f, 0.5f);
 
 	{
-		
+		// Texture loading
+		Texture* roughness_texture = Texture::Get("data/models/ball/roughness.png");
+		Texture* metalness_texture = Texture::Get("data/models/ball/metalness.png");
 
-		// add your code
+		// Material 
+		PBRMaterial* ball_mat = new PBRMaterial(0.4f, 0.9f);
+		ball_mat->roughness_texture = roughness_texture;
+		ball_mat->metalness_texture = metalness_texture;
 
+		// Mesh Loading
+		Mesh* ball_mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
 
-		//node_list.push_back(node_skybox);
+		SceneNode* ball_node = new PBRNode("Ball node");
+
+		ball_node->material = (Material*)ball_mat;
+		ball_node->mesh = ball_mesh;
+		ball_node->model.scale(1.0f, 1.0f, 1.0f);
+			
+		light = new Light(Vector3(0.0f, 10.0f, 0.0f), Vector4(1.0f, 0.0f, 0.5f, 1.0f), Vector3(0.5f, 0.5f, 0.5f), "Light");
+
+		node_list.push_back(ball_node);
+		node_list.push_back(light);
 	}
 	
 	//hide the cursor
@@ -78,9 +95,9 @@ void Application::render(void)
 	glDisable(GL_CULL_FACE);
 
 	for (size_t i = 0; i < node_list.size(); i++) {
-		if(node_list[i]->type == SceneNodeTypes::PHONGNODE) {
-			PhongNode* node_phong = (PhongNode*)node_list[i];
-			//node_phong->render(camera, (Light*)light);
+		if(node_list[i]->type == SceneNodeTypes::PBRNODE) {
+			PBRNode* node_pbr = (PBRNode*)node_list[i];
+			node_pbr->render(camera, (Light*)light);
 		}
 		else if(node_list[i]->type != SceneNodeTypes::LIGHT){
 			node_list[i]->render(camera);
@@ -109,8 +126,8 @@ void Application::update(double seconds_elapsed)
 	}*/
 
 	// Update skybox position
-	SkyboxNode* skybox = (SkyboxNode*)node_list[0];
-	skybox->syncCameraPosition(camera->eye);
+	//SkyboxNode* skybox = (SkyboxNode*)node_list[0];
+	//skybox->syncCameraPosition(camera->eye);
 
 	//mouse input to rotate the cam
 	if ((Input::mouse_state & SDL_BUTTON_LEFT && !ImGui::IsAnyWindowHovered() 
