@@ -71,12 +71,12 @@ ObjectNode::ObjectNode(const char* name) {
 	this->name = name;
 }
 
-PhongNode::PhongNode(const char* name) {
-	type = SceneNodeTypes::PHONGNODE;
+PBRNode::PBRNode(const char* name) {
+	type = SceneNodeTypes::PBRNODE;
 	this->name = name;
 }
 
-void PhongNode::render(Camera* camera, Light* light) {
+void PBRNode::render(Camera* camera, Light* light) {
 	light->setUniforms();
 	SceneNode::render(camera);
 }
@@ -87,7 +87,7 @@ Light::Light(Vector3 position, Vector4 color, Vector3 intensity, const char* nam
 	this->model.setTranslation(position.x, position.y, position.z);
 	this->color = color;
 	this->intensity = intensity;	
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/phong.fs"); // CANVIAR SHADER
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/pbr.fs"); // CANVIAR SHADER
 }
 
 void Light::setUniforms() {
