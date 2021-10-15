@@ -29,8 +29,8 @@ struct Vectors{
 
 struct PBRMat
 {
-	vec4 roughness;
-	vec4 metalness;
+	float roughness;
+	float metalness;
 	vec3 c_diff;
 	vec3 F0;	
 }pbr_mat;
@@ -54,11 +54,11 @@ void computeVectors(){
 }
 
 void getMaterialProperties(){
-	pbr_mat.roughness = u_roughness_factor*texture2D(u_roughness_texture, v_uv);
-	pbr_mat.metalness = u_metalness_factor*texture2D(u_metalness_texture, v_uv);
+	pbr_mat.roughness = u_roughness_factor*texture2D(u_roughness_texture, v_uv).x;
+	pbr_mat.metalness = u_metalness_factor*texture2D(u_metalness_texture, v_uv).x;
 	
-	pbr_mat.c_diff = mix(vec3(0.0), u_color.xyz, u_metalness_factor);
-	pbr_mat.F0 = mix(u_color.xyz, vec3(0.04), u_metalness_factor);
+	pbr_mat.c_diff = mix(vec3(0.0), u_color.xyz, pbr_mat.metalness);
+	pbr_mat.F0 = mix(u_color.xyz, vec3(0.04), pbr_mat.metalness);
 }
 
 vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
@@ -67,7 +67,7 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 }
 
 vec3 EpicNotesGeometricFunction(){
-	float k = pow(pbr_mat.roughness + 1, vec4(2))/8;
+	float k = pow(pbr_mat.roughness + 1, 2)/8;
 	vec3 N = vectors.N;
 	vec3 V = vectors.V;
 	vec3 L = vectors.L;
@@ -83,8 +83,26 @@ vec3 EpicNotesGeometricFunction(){
 	return g1_L * g1_V;
 }
 
+vec3 CookTorranceGeometricFunction(){
+	vec3 N = vectors.N;
+	vec3 H = vectors.H;
+	vec3 V = vectors.V;
+	
+	float NdotH = max(dot(N, H), 0.0);
+	float NdotV = max(dot(N, V), 0.0);
+	float VdotH = max(dot(V, H), 0.0);
+	float NdotL = max(dot(N, vectors.L), 0.0);
+	
+	float first_term = 2 * NdotH*NdotV / VdotH;
+	float second_term = 2 * NdotH*NdotL / VdotH;
+	
+	float first_min = min(1, first_term);
+	
+	return min(first_min, second_term);
+}
+
 vec3 BeckmanTowebrigdeDistributionFunction(){
-	float alpha_sq = pow(pbr_mat.roughness,vec4(4));
+	float alpha_sq = pow(pbr_mat.roughness,4);
 	float NdotH_sq = pow(max(dot(vectors.N,vectors.H), 0.0),2);
 	float denominator = pow(NdotH_sq*(alpha_sq-1)+1,2);
 	return alpha_sq*RECIPROCAL_PI/denominator;
@@ -98,18 +116,18 @@ vec3 getPixelColor(){
 	// PBR Specular
 	float cosTheta = max(dot(vectors.N, vectors.L), 0.0);
 	vec3 F = FresnelSchlickRoughness(cosTheta, pbr_mat.F0, pbr_mat.roughness);
-	float G = EpicNotesGeometricFunction();
+	float G = CookTorranceGeometricFunction();
 	float D = BeckmanTowebrigdeDistributionFunction();
 	float NdotL = max(dot(vectors.N,vectors.L), 0.0);
 	float NdotV = max(dot(vectors.N,vectors.V), 0.0);
 	
-	return F*G*D/(4*NdotL*NdotV);
+	return f_lambert + F*G*D/(4*NdotL*NdotV);
 	
 }
 
 void main(){
 	computeVectors();
 	getMaterialProperties();
-	gl_FragColor.xyz = getPixelColor();
+	gl_FragColor.xyz = u_light_color*getPixelColor();
 	
 }
