@@ -67,7 +67,20 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		ball_node->material = (Material*)ball_mat;
 		ball_node->mesh = ball_mesh;
 		ball_node->model.scale(1.0f, 1.0f, 1.0f);
-			
+		
+		// HDRE textures
+		HDRE* hdre = HDRE::Get("data/environments/studio.hdre");
+		Texture* texture = new Texture();
+
+		// crear array to store all the hdre versions ->>> hdre_versions[];
+
+		for (unsigned int LEVEL = 0; LEVEL <= 4; LEVEL = LEVEL + 1) {
+			//hdre_versions[LEVEL] = texture->cubemapFromHDRE(hdre, LEVEL);
+			texture->cubemapFromHDRE(hdre, LEVEL); // store this version to the array created before. 
+		}
+
+
+		// Light
 		light = new Light(Vector3(0.0f, 10.0f, 0.0f), Vector4(1.0f, 0.0f, 0.5f, 1.0f), Vector3(0.5f, 0.5f, 0.5f), "Light");
 
 		node_list.push_back(ball_node);

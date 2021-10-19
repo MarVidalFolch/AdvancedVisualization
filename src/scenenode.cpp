@@ -124,3 +124,22 @@ void SkyboxNode::render(Camera* camera) {
 
 	glEnable(GL_DEPTH_TEST);
 }
+
+Environment::Environment(const char* name) {
+	type = SceneNodeTypes::ENVIRONMENT;
+	this->name = name;
+}
+
+void Environment::setUniforms() {
+
+	// pasar el array con todas las blurred versions of HDRE (hdre_versions[] defined in application) NO SE COM HACERLO 
+
+	shader->enable();
+	shader->setUniform("u_texture_prem_0", hdre_versions[0]);
+	shader->setUniform("u_texture_prem_1", hdre_versions[1]);
+	shader->setUniform("u_texture_prem_2", hdre_versions[2]);
+	shader->setUniform("u_texture_prem_3", hdre_versions[3]);
+	shader->setUniform("u_texture_prem_4", hdre_versions[4]);
+	shader->disable();
+}
+
