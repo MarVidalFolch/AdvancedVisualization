@@ -118,16 +118,18 @@ vec3 getPixelColor(){
 	vec3 F = FresnelSchlickRoughness(cosTheta, pbr_mat.F0, pbr_mat.roughness);
 	float G = CookTorranceGeometricFunction();
 	float D = BeckmanTowebrigdeDistributionFunction();
-	float NdotL = max(dot(vectors.N,vectors.L), 0.0);
-	float NdotV = max(dot(vectors.N,vectors.V), 0.0);
+	float NdotL = clamp(dot(vectors.N,vectors.L),0.0001, 1.0);
+	float NdotV = clamp(dot(vectors.N,vectors.V), 0.0001, 1.0);
 	
-	return f_lambert + F*G*D/(4*NdotL*NdotV);
+	vec3 specular_amount = F*G*D / (4*NdotL*NdotV);
+	
+	return f_lambert + specular_amount;
 	
 }
 
 void main(){
 	computeVectors();
 	getMaterialProperties();
-	gl_FragColor.xyz = u_light_color*getPixelColor();
+	gl_FragColor.xyz = u_light_color * getPixelColor();
 	
 }
