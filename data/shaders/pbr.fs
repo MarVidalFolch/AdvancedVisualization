@@ -76,8 +76,8 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-vec3 EpicNotesGeometricFunction(){
-	float k = pow(pbr_mat.roughness + 1, 2)/8;
+float EpicNotesGeometricFunction(){
+	float k = pow(pbr_mat.roughness + 1.0, 2.0)/8.0;
 	vec3 N = vectors.N;
 	vec3 V = vectors.V;
 	vec3 L = vectors.L;
@@ -85,15 +85,15 @@ vec3 EpicNotesGeometricFunction(){
 	float NdotV = max(dot(N,V), 0.0);
 	
 	// G_1(L)
-	vec3 g1_L = NdotL /(NdotL*(1-k)+k);
+	float g1_L = NdotL /(NdotL*(1.0-k)+k);
 		
 	// G_1(V)
-	vec3 g1_V = NdotV /(NdotV*(1-k)+k);
+	float g1_V = NdotV /(NdotV*(1.0-k)+k);
 	
 	return g1_L * g1_V;
 }
 
-vec3 CookTorranceGeometricFunction(){
+float CookTorranceGeometricFunction(){
 	vec3 N = vectors.N;
 	vec3 H = vectors.H;
 	vec3 V = vectors.V;
@@ -103,18 +103,18 @@ vec3 CookTorranceGeometricFunction(){
 	float VdotH = max(dot(V, H), 0.0);
 	float NdotL = max(dot(N, vectors.L), 0.0);
 	
-	float first_term = 2 * NdotH*NdotV / VdotH;
-	float second_term = 2 * NdotH*NdotL / VdotH;
+	float first_term = 2.0 * NdotH*NdotV / VdotH;
+	float second_term = 2.0 * NdotH*NdotL / VdotH;
 	
-	float first_min = min(1, first_term);
+	float first_min = min(1.0, first_term);
 	
 	return min(first_min, second_term);
 }
 
-vec3 BeckmanTowebrigdeDistributionFunction(){
-	float alpha_sq = pow(pbr_mat.roughness,4);
-	float NdotH_sq = pow(max(dot(vectors.N,vectors.H), 0.0),2);
-	float denominator = pow(NdotH_sq*(alpha_sq-1)+1,2);
+float BeckmanTowebrigdeDistributionFunction(){
+	float alpha_sq = pow(pbr_mat.roughness,4.0);
+	float NdotH_sq = pow(max(dot(vectors.N,vectors.H), 0.0),2.0);
+	float denominator = pow(NdotH_sq*(alpha_sq-1.0)+1.0,2.0);
 	return alpha_sq*RECIPROCAL_PI/denominator;
 
 }
@@ -131,7 +131,7 @@ vec3 getPixelColor(){
 	float NdotL = clamp(dot(vectors.N,vectors.L),0.0001, 1.0);
 	float NdotV = clamp(dot(vectors.N,vectors.V), 0.0001, 1.0);
 	
-	vec3 specular_amount = F*G*D / (4*NdotL*NdotV);
+	vec3 specular_amount = F*G*D / (4.0*NdotL*NdotV);
 	
 	return f_lambert + specular_amount;
 	
