@@ -1,5 +1,6 @@
 #define PI 3.14159265359
 #define RECIPROCAL_PI 0.3183098861837697
+#define epsilon 0.0000001
 
 uniform sampler2D u_roughness_texture;
 uniform float u_roughness_factor;
@@ -71,8 +72,8 @@ float EpicNotesGeometricFunction(){
 	vec3 N = vectors.N;
 	vec3 V = vectors.V;
 	vec3 L = vectors.L;
-	float NdotL = max(dot(N,L), 0.0);
-	float NdotV = max(dot(N,V), 0.0);
+	float NdotL = max(dot(N,L), epsilon);
+	float NdotV = max(dot(N,V), epsilon);
 	
 	// G_1(L)
 	float g1_L = NdotL /(NdotL*(1.0-k)+k);
@@ -88,10 +89,10 @@ float CookTorranceGeometricFunction(){
 	vec3 H = vectors.H;
 	vec3 V = vectors.V;
 	
-	float NdotH = max(dot(N, H), 0.0);
-	float NdotV = max(dot(N, V), 0.0);
-	float VdotH = max(dot(V, H), 0.0);
-	float NdotL = max(dot(N, vectors.L), 0.0);
+	float NdotH = max(dot(N, H), epsilon);
+	float NdotV = max(dot(N, V), epsilon);
+	float VdotH = max(dot(V, H), epsilon);
+	float NdotL = max(dot(N, vectors.L), epsilon);
 	
 	float first_term = 2.0 * NdotH*NdotV / VdotH;
 	float second_term = 2.0 * NdotH*NdotL / VdotH;
@@ -103,7 +104,7 @@ float CookTorranceGeometricFunction(){
 
 float BeckmanTowebrigdeDistributionFunction(){
 	float alpha_sq = pow(pbr_mat.roughness,4.0);
-	float NdotH_sq = pow(max(dot(vectors.N,vectors.H), 0.0),2.0);
+	float NdotH_sq = pow(max(dot(vectors.N,vectors.H), epsilon),2.0);
 	float denominator = pow(NdotH_sq*(alpha_sq-1.0)+1.0,2.0);
 	return alpha_sq*RECIPROCAL_PI/denominator;
 
@@ -116,10 +117,10 @@ vec3 getPixelColor(){
 	// PBR Specular
 	float cosTheta = max(dot(vectors.N, vectors.L), 0.0);
 	vec3 F = FresnelSchlickRoughness(cosTheta, pbr_mat.F0, pbr_mat.roughness);
-	float G = CookTorranceGeometricFunction();
+	float G = EpicNotesGeometricFunction();
 	float D = BeckmanTowebrigdeDistributionFunction();
-	float NdotL = clamp(dot(vectors.N,vectors.L),0.0001, 1.0);
-	float NdotV = clamp(dot(vectors.N,vectors.V), 0.0001, 1.0);
+	float NdotL = clamp(dot(vectors.N,vectors.L),epsilon, 1.0);
+	float NdotV = clamp(dot(vectors.N,vectors.V), epsilon, 1.0);
 	
 	vec3 specular_amount = F*G*D / (4.0*NdotL*NdotV);
 	
