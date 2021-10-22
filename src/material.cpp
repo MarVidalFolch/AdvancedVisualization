@@ -221,6 +221,15 @@ void PBRMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	StandardMaterial::setUniforms(camera, model);
 	shader->setUniform("u_roughness_texture", roughness_texture, (int)TextureSlots::ROUGHNESS);
 	shader->setUniform("u_metalness_texture", metalness_texture, (int)TextureSlots::METALNESS);
+	shader->setUniform("u_albedo_texture", albedo_texture, (int)TextureSlots::ALBEDO);
 	shader->setUniform("u_roughness_factor", roughness_factor);
 	shader->setUniform("u_metalness_factor", metalness_factor);
+}
+
+void PBRMaterial::renderInMenu() {
+	ImGui::DragFloat("Roughness factor", &this->roughness_factor, 0.0025f, 0.0f, 1.0f);
+	ImGui::DragFloat("Metalness factor", &this->metalness_factor, 0.0025f, 0.0f, 1.0f);
+	//ImGui::DragFloat3("Color", &this->color)
+
+
 }
