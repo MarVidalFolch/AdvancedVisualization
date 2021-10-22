@@ -125,6 +125,7 @@ void SkyboxNode::render(Camera* camera) {
 	glEnable(GL_DEPTH_TEST);
 }
 
+/*
 Environment::Environment(const char* name) {
 	type = SceneNodeTypes::ENVIRONMENT;
 	this->name = name;
@@ -142,4 +143,4 @@ void Environment::setUniforms() {
 	shader->setUniform("u_texture_prem_4", hdre_versions[4]);
 	shader->disable();
 }
-
+*/

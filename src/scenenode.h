@@ -69,11 +69,12 @@ public:
 	void render(Camera* camera);
 };
 
+/*
 class Environment : public SceneNode {
 public:
 	Environment(const char* name = "ENVIRONMENT NODE");
 	//void render(Camera* camera, Light* light);
 	void setUniforms();
 };
-
+*/
 #endif

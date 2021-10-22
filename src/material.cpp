@@ -224,6 +224,16 @@ void PBRMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	shader->setUniform("u_albedo_texture", albedo_texture, (int)TextureSlots::ALBEDO);
 	shader->setUniform("u_roughness_factor", roughness_factor);
 	shader->setUniform("u_metalness_factor", metalness_factor);
+
+	// HDRE environment
+	shader->setUniform("u_hdre_texture_original", hdre_versions_environment[0], (int)TextureSlots::HDRE_ORIG);
+	for (int i = 1; i < hdre_versions_environment.size(); i++) {
+		shader->setUniform("u_hdre_texture_prem_" + i, hdre_versions_environment[i], (int)TextureSlots::HDRE_L0 + i);
+		std::cout << "u_hdre_texture_prem_" + i;
+	}
+
+	// BRDF LUT
+	shader->setUniform("u_brdf_lut", brdfLUT_texture, (int)TextureSlots::BRDF_LUT);
 }
 
 void PBRMaterial::renderInMenu() {

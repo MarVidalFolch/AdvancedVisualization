@@ -89,6 +89,10 @@ public:
 	Texture* albedo_texture;
 	float roughness_factor;
 	float metalness_factor;
+
+	Texture* brdfLUT_texture;
+	std::vector<Texture*> hdre_versions_environment;
+
 	PBRMaterial(char* filename_texture, Texture* texture = NULL);
 	PBRMaterial(float roughness_factor, float metalness_factor);
 	//void renderInMenu();

@@ -6,11 +6,12 @@
 uniform sampler2D u_brdf_lut;
 
 // HDRE environmnent
-uniform samplerCube u_texture_prem_0;
-uniform samplerCube u_texture_prem_1;
-uniform samplerCube u_texture_prem_2;
-uniform samplerCube u_texture_prem_3;
-uniform samplerCube u_texture_prem_4;
+uniform samplerCube u_hdre_texture_original;
+uniform samplerCube u_hdre_texture_prem_0;
+uniform samplerCube u_hdre_texture_prem_1;
+uniform samplerCube u_hdre_texture_prem_2;
+uniform samplerCube u_hdre_texture_prem_3;
+uniform samplerCube u_hdre_texture_prem_4;
 
 uniform sampler2D u_roughness_texture;
 uniform float u_roughness_factor;
@@ -159,12 +160,12 @@ vec3 getReflectionColor(vec3 r, float roughness)
 
 	vec4 color;
 
-	if(lod < 1.0) color = mix( textureCube(u_texture, r), textureCube(u_texture_prem_0, r), lod );
-	else if(lod < 2.0) color = mix( textureCube(u_texture_prem_0, r), textureCube(u_texture_prem_1, r), lod - 1.0 );
-	else if(lod < 3.0) color = mix( textureCube(u_texture_prem_1, r), textureCube(u_texture_prem_2, r), lod - 2.0 );
-	else if(lod < 4.0) color = mix( textureCube(u_texture_prem_2, r), textureCube(u_texture_prem_3, r), lod - 3.0 );
-	else if(lod < 5.0) color = mix( textureCube(u_texture_prem_3, r), textureCube(u_texture_prem_4, r), lod - 4.0 );
-	else color = textureCube(u_texture_prem_4, r);
+	if(lod < 1.0) color = mix( textureCube(u_hdre_texture_original, r), textureCube(u_hdre_texture_prem_0, r), lod );
+	else if(lod < 2.0) color = mix( textureCube(u_hdre_texture_prem_0, r), textureCube(u_hdre_texture_prem_1, r), lod - 1.0 );
+	else if(lod < 3.0) color = mix( textureCube(u_hdre_texture_prem_1, r), textureCube(u_hdre_texture_prem_2, r), lod - 2.0 );
+	else if(lod < 4.0) color = mix( textureCube(u_hdre_texture_prem_2, r), textureCube(u_hdre_texture_prem_3, r), lod - 3.0 );
+	else if(lod < 5.0) color = mix( textureCube(u_hdre_texture_prem_3, r), textureCube(u_hdre_texture_prem_4, r), lod - 4.0 );
+	else color = textureCube(u_hdre_texture_prem_4, r);
 
 	return color.rgb;
 }

@@ -21,7 +21,14 @@ enum class TextureSlots {
 	ALBEDO = 0,
 	NORMAL = 1,
 	ROUGHNESS = 2,
-	METALNESS = 3
+	METALNESS = 3,
+	HDRE_ORIG = 4,
+	HDRE_L0 = 5,
+	HDRE_L1 = 6,
+	HDRE_L2 = 7,
+	HDRE_L3 = 9,
+	HDRE_L4 = 10,
+	BRDF_LUT = 11
 };
 
 //Simple class to handle images (stores RGBA always)

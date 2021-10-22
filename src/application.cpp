@@ -55,11 +55,32 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		Texture* metalness_texture = Texture::Get("data/models/ball/metalness.png");
 		Texture* albedo_texture = Texture::Get("data/models/ball/albedo.png");
 
+		// HDRE textures
+		HDRE* hdre = HDRE::Get("data/environments/studio.hdre");
+
+		// create an array to store all the hdre versions 
+		std::vector<Texture*> hdre_versions;
+
+		// There are 5 levels: the original + 5 blurred versions
+		for (unsigned int LEVEL = 0; LEVEL < 6; LEVEL = LEVEL + 1) {
+			Texture* texture = new Texture();
+			//hdre_versions[LEVEL] = texture->cubemapFromHDRE(hdre, LEVEL);
+			texture->cubemapFromHDRE(hdre, LEVEL); // store this version to the array created before. 
+
+			hdre_versions.push_back(texture);
+		}
+
+		// LUT
+		Texture* brdfLUT_texture = Texture::Get("data/brdfLUT.png");
+
 		// Material 
 		PBRMaterial* ball_mat = new PBRMaterial(0.4f, 0.9f);
 		ball_mat->roughness_texture = roughness_texture;
 		ball_mat->metalness_texture = metalness_texture;
 		ball_mat->albedo_texture = albedo_texture;
+		ball_mat->hdre_versions_environment = hdre_versions;
+		ball_mat->brdfLUT_texture = brdfLUT_texture;
+
 
 		// Mesh Loading
 		Mesh* ball_mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
@@ -69,17 +90,6 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		ball_node->material = (Material*)ball_mat;
 		ball_node->mesh = ball_mesh;
 		ball_node->model.scale(1.0f, 1.0f, 1.0f);
-		
-		// HDRE textures
-		HDRE* hdre = HDRE::Get("data/environments/studio.hdre");
-		Texture* texture = new Texture();
-
-		// crear array to store all the hdre versions ->>> hdre_versions[];
-
-		for (unsigned int LEVEL = 0; LEVEL <= 4; LEVEL = LEVEL + 1) {
-			//hdre_versions[LEVEL] = texture->cubemapFromHDRE(hdre, LEVEL);
-			texture->cubemapFromHDRE(hdre, LEVEL); // store this version to the array created before. 
-		}
 
 
 		// Light
