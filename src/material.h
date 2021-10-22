@@ -86,6 +86,7 @@ class PBRMaterial : public TextureMaterial {
 public:
 	Texture* roughness_texture;
 	Texture* metalness_texture;
+	Texture* albedo_texture;
 	float roughness_factor;
 	float metalness_factor;
 	PBRMaterial(char* filename_texture, Texture* texture = NULL);
@@ -93,6 +94,7 @@ public:
 	//void renderInMenu();
 	void textureUpdate();
 	void setUniforms(Camera* camera, Matrix44 model);
+	void renderInMenu();
 };
 
 

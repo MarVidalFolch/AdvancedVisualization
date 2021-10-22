@@ -53,11 +53,13 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		// Texture loading
 		Texture* roughness_texture = Texture::Get("data/models/ball/roughness.png");
 		Texture* metalness_texture = Texture::Get("data/models/ball/metalness.png");
+		Texture* albedo_texture = Texture::Get("data/models/ball/albedo.png");
 
 		// Material 
 		PBRMaterial* ball_mat = new PBRMaterial(0.4f, 0.9f);
 		ball_mat->roughness_texture = roughness_texture;
 		ball_mat->metalness_texture = metalness_texture;
+		ball_mat->albedo_texture = albedo_texture;
 
 		// Mesh Loading
 		Mesh* ball_mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
