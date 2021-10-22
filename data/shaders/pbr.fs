@@ -2,6 +2,16 @@
 #define RECIPROCAL_PI 0.3183098861837697
 #define epsilon 0.0000001
 
+// LUT
+uniform sampler2D u_brdf_lut;
+
+// HDRE environmnent
+uniform samplerCube u_texture_prem_0;
+uniform samplerCube u_texture_prem_1;
+uniform samplerCube u_texture_prem_2;
+uniform samplerCube u_texture_prem_3;
+uniform samplerCube u_texture_prem_4;
+
 uniform sampler2D u_roughness_texture;
 uniform float u_roughness_factor;
 uniform sampler2D u_metalness_texture;
@@ -143,9 +153,54 @@ vec3 getPixelColor(){
 	
 }
 
+vec3 getReflectionColor(vec3 r, float roughness)
+{
+	float lod = roughness * 5.0;
+
+	vec4 color;
+
+	if(lod < 1.0) color = mix( textureCube(u_texture, r), textureCube(u_texture_prem_0, r), lod );
+	else if(lod < 2.0) color = mix( textureCube(u_texture_prem_0, r), textureCube(u_texture_prem_1, r), lod - 1.0 );
+	else if(lod < 3.0) color = mix( textureCube(u_texture_prem_1, r), textureCube(u_texture_prem_2, r), lod - 2.0 );
+	else if(lod < 4.0) color = mix( textureCube(u_texture_prem_2, r), textureCube(u_texture_prem_3, r), lod - 3.0 );
+	else if(lod < 5.0) color = mix( textureCube(u_texture_prem_3, r), textureCube(u_texture_prem_4, r), lod - 4.0 );
+	else color = textureCube(u_texture_prem_4, r);
+
+	return color.rgb;
+}
+
+
 void main(){
 	computeVectors();
 	getMaterialProperties();
-	gl_FragColor.xyz = u_light_intensity * u_light_color.xyz * getPixelColor() * dp.NdotL;
+	
+	// PBR direct light
+	vec3 pbr_term = getPixelColor();
+	
+	// IBL indirect ligt
+	vec3 specularSample = getReflectionColor(vectors.R, pbr_mat.roughness);
+	
+	float NdotV = clamp(dot(vectors.N,vectors.V), 0.0, 1.0);
+	
+	vec3 brdf2D = texture2D(u_brdf_lut, vec2(NdotV, pbr_mat.roughness)).xyz;
+	
+	float cosTheta = max(dot(vectors.N, vectors.L), 0.0);
+	vec3 SpecularBRDF = FresnelSchlickRoughness(cosTheta, pbr_mat.F0, pbr_mat.roughness) * brdf2D.x + brdf2D.y;
+	vec3 SpecularIBL = specularSample * SpecularBRDF;
+	
+	vec3 diffuseSample = getReflectionColor(vectors.N, pbr_mat.roughness);
+	vec3 difusseColor = pbr_mat.c_diff;
+	vec3 DiffuseIBL = diffuseSample * difusseColor;
+	
+	// DiffuseIBL *= (1-Ks)
+	
+	vec3 ibl_term = SpecularIBL + DiffuseIBL;
+	
+	
+	// Final light
+	vec3 light = pbr_term + ibl_term;
+	
+	
+	gl_FragColor.xyz = u_light_intensity * u_light_color.xyz * light * dp.NdotL;
 	
 }
