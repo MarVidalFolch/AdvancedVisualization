@@ -6,6 +6,7 @@ uniform sampler2D u_roughness_texture;
 uniform float u_roughness_factor;
 uniform sampler2D u_metalness_texture;
 uniform float u_metalness_factor;
+uniform sampler2D u_albedo_texture;
 uniform vec4 u_color;
 
 uniform vec4 u_light_color;
@@ -32,6 +33,7 @@ struct PBRMat
 {
 	float roughness;
 	float metalness;
+	vec4 base_color;
 	vec3 c_diff;
 	vec3 F0;	
 }pbr_mat;
@@ -76,8 +78,10 @@ void getMaterialProperties(){
 	pbr_mat.roughness = u_roughness_factor*texture2D(u_roughness_texture, v_uv).x;
 	pbr_mat.metalness = u_metalness_factor*texture2D(u_metalness_texture, v_uv).x;
 	
-	pbr_mat.c_diff = mix(vec3(0.0), u_color.xyz, pbr_mat.metalness);
-	pbr_mat.F0 = mix(u_color.xyz, vec3(0.04), pbr_mat.metalness);
+	pbr_mat.base_color = texture2D(u_albedo_texture, v_uv);
+	
+	pbr_mat.c_diff = mix(pbr_mat.base_color.rgb, vec3(0.0), pbr_mat.metalness);
+	pbr_mat.F0 = mix(vec3(0.04), pbr_mat.base_color.rgb, pbr_mat.metalness);
 }
 
 vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
@@ -142,6 +146,6 @@ vec3 getPixelColor(){
 void main(){
 	computeVectors();
 	getMaterialProperties();
-	gl_FragColor.xyz = u_light_color.xyz * getPixelColor() * dp.NdotL;
+	gl_FragColor.xyz = u_light_intensity * u_light_color.xyz * getPixelColor() * dp.NdotL;
 	
 }
