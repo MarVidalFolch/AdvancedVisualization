@@ -1,6 +1,8 @@
 #define PI 3.14159265359
 #define RECIPROCAL_PI 0.3183098861837697
 #define epsilon 0.0000001
+const float GAMMA = 2.2;
+const float INV_GAMMA = 1.0 / GAMMA;
 
 // LUT
 uniform sampler2D u_brdf_lut;
@@ -75,7 +77,7 @@ void computeVectors(){
 	vectors.N = normalize(v_normal);
 	
 	// Reflected ray 
-	vectors.R = reflect(-vectors.L, vectors.N);
+	vectors.R = reflect(-vectors.V, vectors.N);
 	vectors.R = normalize(vectors.R);
 	
 	// Half vector
@@ -85,11 +87,25 @@ void computeVectors(){
 	computeDotProducts(vectors.N, vectors.L, vectors.V, vectors.H);
 }
 
+// degamma
+vec3 gamma_to_linear(vec3 color)
+{
+	return pow(color, vec3(GAMMA));
+}
+
+// gamma
+vec3 linear_to_gamma(vec3 color)
+{
+	return pow(color, vec3(INV_GAMMA));
+}
+
 void getMaterialProperties(){
 	pbr_mat.roughness = u_roughness_factor*texture2D(u_roughness_texture, v_uv).x;
 	pbr_mat.metalness = u_metalness_factor*texture2D(u_metalness_texture, v_uv).x;
 	
 	pbr_mat.base_color = texture2D(u_albedo_texture, v_uv);
+	
+	pbr_mat.base_color.xyz = gamma_to_linear(pbr_mat.base_color.xyz);
 	
 	pbr_mat.c_diff = mix(pbr_mat.base_color.rgb, vec3(0.0), pbr_mat.metalness);
 	pbr_mat.F0 = mix(vec3(0.04), pbr_mat.base_color.rgb, pbr_mat.metalness);
@@ -171,6 +187,32 @@ vec3 getReflectionColor(vec3 r, float roughness)
 }
 
 
+// Uncharted 2 tone map
+// see: http://filmicworlds.com/blog/filmic-tonemapping-operators/
+vec3 toneMapUncharted2Impl(vec3 color)
+{
+    const float A = 0.15;
+    const float B = 0.50;
+    const float C = 0.10;
+    const float D = 0.20;
+    const float E = 0.02;
+    const float F = 0.30;
+    return ((color*(A*color+C*B)+D*E)/(color*(A*color+B)+D*F))-E/F;
+}
+
+vec3 toneMapUncharted(vec3 color)
+{
+    const float W = 11.2;
+    color = toneMapUncharted2Impl(color * 2.0);
+    vec3 whiteScale = 1.0 / toneMapUncharted2Impl(vec3(W));
+    return color * whiteScale;
+}
+
+vec3 toneMap(vec3 color)
+{
+    return color / (color + vec3(1.0));
+}
+
 void main(){
 	computeVectors();
 	getMaterialProperties();
@@ -178,7 +220,7 @@ void main(){
 	// PBR direct light
 	vec3 pbr_term = getPixelColor();
 	
-	// IBL indirect ligt
+	// IBL indirect light
 	vec3 specularSample = getReflectionColor(vectors.R, pbr_mat.roughness);
 	
 	float NdotV = clamp(dot(vectors.N,vectors.V), 0.0, 1.0);
@@ -186,22 +228,26 @@ void main(){
 	vec3 brdf2D = texture2D(u_brdf_lut, vec2(NdotV, pbr_mat.roughness)).xyz;
 	
 	float cosTheta = max(dot(vectors.N, vectors.L), 0.0);
-	vec3 SpecularBRDF = FresnelSchlickRoughness(cosTheta, pbr_mat.F0, pbr_mat.roughness) * brdf2D.x + brdf2D.y;
+	vec3 F = FresnelSchlickRoughness(cosTheta, pbr_mat.F0, pbr_mat.roughness);
+	vec3 SpecularBRDF = F * brdf2D.x + brdf2D.y;
 	vec3 SpecularIBL = specularSample * SpecularBRDF;
 	
 	vec3 diffuseSample = getReflectionColor(vectors.N, pbr_mat.roughness);
 	vec3 difusseColor = pbr_mat.c_diff;
 	vec3 DiffuseIBL = diffuseSample * difusseColor;
 	
-	// DiffuseIBL *= (1-Ks)
+	DiffuseIBL *= (1.0-F);
 	
 	vec3 ibl_term = SpecularIBL + DiffuseIBL;
 	
 	
 	// Final light
-	vec3 light = pbr_term + ibl_term;
+	vec3 light = u_light_intensity * u_light_color.xyz * pbr_term * dp.NdotL + ibl_term;
 	
+	vec3 pixelColor = toneMap(light);
 	
-	gl_FragColor.xyz = u_light_intensity * u_light_color.xyz * light * dp.NdotL;
+	pixelColor = linear_to_gamma(pixelColor);
+	
+	gl_FragColor.xyz = pixelColor;
 	
 }

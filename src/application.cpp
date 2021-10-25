@@ -56,7 +56,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		Texture* albedo_texture = Texture::Get("data/models/ball/albedo.png");
 
 		// HDRE textures
-		HDRE* hdre = HDRE::Get("data/environments/studio.hdre");
+		HDRE* hdre = HDRE::Get("data/environments/pisa.hdre");
 
 		// create an array to store all the hdre versions 
 		std::vector<Texture*> hdre_versions;
@@ -74,7 +74,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		Texture* brdfLUT_texture = Texture::Get("data/brdfLUT.png");
 
 		// Material 
-		PBRMaterial* ball_mat = new PBRMaterial(0.4f, 0.9f);
+		PBRMaterial* ball_mat = new PBRMaterial(0.0f, 1.0f);
 		ball_mat->roughness_texture = roughness_texture;
 		ball_mat->metalness_texture = metalness_texture;
 		ball_mat->albedo_texture = albedo_texture;
@@ -93,7 +93,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 
 
 		// Light
-		light = new Light(Vector3(0.0f, 10.0f, 0.0f), Vector4(1.0f, 0.0f, 0.5f, 1.0f), Vector3(0.5f, 0.5f, 0.5f), "Light");
+		light = new Light(Vector3(0.0f, 10.0f, 0.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), Vector3(1.0f, 1.0f, 1.0f), "Light");
 
 		node_list.push_back(ball_node);
 		node_list.push_back(light);
