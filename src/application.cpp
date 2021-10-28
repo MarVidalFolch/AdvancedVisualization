@@ -55,11 +55,32 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		Texture* metalness_texture = Texture::Get("data/models/ball/metalness.png");
 		Texture* albedo_texture = Texture::Get("data/models/ball/albedo.png");
 
+		// HDRE textures
+		HDRE* hdre = HDRE::Get("data/environments/pisa.hdre");
+
+		// create an array to store all the hdre versions 
+		std::vector<Texture*> hdre_versions;
+
+		// There are 5 levels: the original + 5 blurred versions
+		for (unsigned int LEVEL = 0; LEVEL < 6; LEVEL = LEVEL + 1) {
+			Texture* texture = new Texture();
+			//hdre_versions[LEVEL] = texture->cubemapFromHDRE(hdre, LEVEL);
+			texture->cubemapFromHDRE(hdre, LEVEL); // store this version to the array created before. 
+
+			hdre_versions.push_back(texture);
+		}
+
+		// LUT
+		Texture* brdfLUT_texture = Texture::Get("data/brdfLUT.png");
+
 		// Material 
-		PBRMaterial* ball_mat = new PBRMaterial(0.4f, 0.9f);
+		PBRMaterial* ball_mat = new PBRMaterial(0.0f, 1.0f);
 		ball_mat->roughness_texture = roughness_texture;
 		ball_mat->metalness_texture = metalness_texture;
 		ball_mat->albedo_texture = albedo_texture;
+		ball_mat->hdre_versions_environment = hdre_versions;
+		ball_mat->brdfLUT_texture = brdfLUT_texture;
+
 
 		// Mesh Loading
 		Mesh* ball_mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
@@ -69,8 +90,10 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		ball_node->material = (Material*)ball_mat;
 		ball_node->mesh = ball_mesh;
 		ball_node->model.scale(1.0f, 1.0f, 1.0f);
-			
-		light = new Light(Vector3(0.0f, 10.0f, 0.0f), Vector4(1.0f, 0.0f, 0.5f, 1.0f), Vector3(0.5f, 0.5f, 0.5f), "Light");
+
+    
+		// Light
+		light = new Light(Vector3(0.0f, 10.0f, 0.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), Vector3(1.0f, 1.0f, 1.0f), "Light");
 
 		node_list.push_back(ball_node);
 		node_list.push_back(light);
@@ -161,6 +184,7 @@ void Application::onKeyDown( SDL_KeyboardEvent event )
 		case SDLK_F1: render_debug = !render_debug; break;
 		case SDLK_F2: render_wireframe = !render_wireframe; break;
 		case SDLK_F5: Shader::ReloadAll(); break; 
+		case SDLK_F4: camera->lookAt(Vector3(5.f, 5.f, 5.f), Vector3(0.f, 0.0f, 0.f), Vector3(0.f, 1.f, 0.f)); break; // Recenter camera
 	}
 }
 
