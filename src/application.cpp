@@ -184,6 +184,7 @@ void Application::onKeyDown( SDL_KeyboardEvent event )
 		case SDLK_F1: render_debug = !render_debug; break;
 		case SDLK_F2: render_wireframe = !render_wireframe; break;
 		case SDLK_F5: Shader::ReloadAll(); break; 
+		case SDLK_F4: camera->lookAt(Vector3(5.f, 5.f, 5.f), Vector3(0.f, 0.0f, 0.f), Vector3(0.f, 1.f, 0.f)); break; // Recenter camera
 	}
 }
 
