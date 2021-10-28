@@ -20,6 +20,7 @@ uniform float u_roughness_factor;
 uniform sampler2D u_metalness_texture;
 uniform float u_metalness_factor;
 uniform sampler2D u_albedo_texture;
+uniform sampler2D u_normal_texture;
 uniform vec4 u_color;
 
 uniform vec4 u_light_color;
@@ -66,6 +67,38 @@ void computeDotProducts(vec3 N, vec3 L, vec3 V, vec3 H){
 	dp.VdotH = max(dot(V, H), epsilon);
 }
 
+//Javi Agenjo Snipet for Bump Mapping
+mat3 cotangent_frame(vec3 N, vec3 p, vec2 uv){
+	// get edge vectors of the pixel triangle
+	vec3 dp1 = dFdx( p );
+	vec3 dp2 = dFdy( p );
+	vec2 duv1 = dFdx( uv );
+	vec2 duv2 = dFdy( uv );
+
+	// solve the linear system
+	vec3 dp2perp = cross( dp2, N );
+	vec3 dp1perp = cross( N, dp1 );
+	vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+	vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
+
+	// construct a scale-invariant frame
+	float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
+	return mat3( T * invmax, B * invmax, N );
+}
+
+vec3 perturbNormal( vec3 N, vec3 V, vec2 texcoord, vec3 normal_pixel ){
+	#ifdef USE_POINTS
+	return N;
+	#endif
+
+	// assume N, the interpolated vertex normal and
+	// V, the view vector (vertex to eye)
+	
+	normal_pixel = normal_pixel * 255./127. - 128./127.;
+	mat3 TBN = cotangent_frame(N, V, texcoord);
+	return normalize(TBN * normal_pixel);
+}
+
 void computeVectors(){
 	// Light vector
 	vectors.L = normalize(u_light_pos - v_world_position);
@@ -74,7 +107,8 @@ void computeVectors(){
 	vectors.V = normalize(u_camera_position - v_world_position);
 	
 	// Normal vector
-	vectors.N = normalize(v_normal);
+	vec3 normal_pixel = texture2D(u_normal_texture, v_uv).xyz;
+	vectors.N = perturbNormal( v_normal, vectors.V, v_uv, normal_pixel );
 	
 	// Reflected ray 
 	vectors.R = reflect(-vectors.V, vectors.N);

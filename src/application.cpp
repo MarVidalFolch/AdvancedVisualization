@@ -54,6 +54,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		Texture* roughness_texture = Texture::Get("data/models/ball/roughness.png");
 		Texture* metalness_texture = Texture::Get("data/models/ball/metalness.png");
 		Texture* albedo_texture = Texture::Get("data/models/ball/albedo.png");
+		Texture* normal_texture = Texture::Get("data/models/ball/normal.png");
 
 		// HDRE textures
 		HDRE* hdre = HDRE::Get("data/environments/pisa.hdre");
@@ -78,6 +79,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		ball_mat->roughness_texture = roughness_texture;
 		ball_mat->metalness_texture = metalness_texture;
 		ball_mat->albedo_texture = albedo_texture;
+		ball_mat->normal_texture = normal_texture;
 		ball_mat->hdre_versions_environment = hdre_versions;
 		ball_mat->brdfLUT_texture = brdfLUT_texture;
 

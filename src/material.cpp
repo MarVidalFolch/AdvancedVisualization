@@ -221,6 +221,7 @@ void PBRMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	StandardMaterial::setUniforms(camera, model);
 	shader->setUniform("u_roughness_texture", roughness_texture, (int)TextureSlots::ROUGHNESS);
 	shader->setUniform("u_metalness_texture", metalness_texture, (int)TextureSlots::METALNESS);
+	shader->setUniform("u_normal_texture", normal_texture, (int)TextureSlots::NORMAL);
 	shader->setUniform("u_albedo_texture", albedo_texture, (int)TextureSlots::ALBEDO);
 	shader->setUniform("u_roughness_factor", roughness_factor);
 	shader->setUniform("u_metalness_factor", metalness_factor);
@@ -233,15 +234,6 @@ void PBRMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	shader->setUniform("u_hdre_texture_prem_3", hdre_versions_environment[4], (int)TextureSlots::HDRE_L3);
 	shader->setUniform("u_hdre_texture_prem_4", hdre_versions_environment[5], (int)TextureSlots::HDRE_L4);
 
-	/*for (int i = 0; i < hdre_versions_environment.size() - 1; i++) {
-		std::string texture_name = "u_hdre_texture_prem_" + std::to_string(i);
-		const char* final_name = texture_name.c_str();
-		shader->setUniform(final_name, hdre_versions_environment[i+1], (int)TextureSlots::HDRE_L0 + i);
-		std::cout << texture_name + "\n";
-		std::cout << (int)TextureSlots::HDRE_L0 + i;
-		std::cout << "\n\n";
-	}
-	*/
 	// BRDF LUT
 	shader->setUniform("u_brdf_lut", brdfLUT_texture, (int)TextureSlots::BRDF_LUT);
 }
