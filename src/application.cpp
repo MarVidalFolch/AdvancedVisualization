@@ -91,7 +91,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		ball_node->mesh = ball_mesh;
 		ball_node->model.scale(1.0f, 1.0f, 1.0f);
 
-
+    
 		// Light
 		light = new Light(Vector3(0.0f, 10.0f, 0.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), Vector3(1.0f, 1.0f, 1.0f), "Light");
 

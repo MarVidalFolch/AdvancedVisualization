@@ -14,7 +14,6 @@ enum class SceneNodeTypes {
 	OBJECT,
 	PBRNODE,
 	SKYBOX,
-	ENVIRONMENT,
 	LIGHT
 };
 
