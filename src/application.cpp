@@ -46,9 +46,6 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	camera->lookAt(Vector3(5.f, 5.f, 5.f), Vector3(0.f, 0.0f, 0.f), Vector3(0.f, 1.f, 0.f));
 	camera->setPerspective(45.f,window_width/(float)window_height,0.1f,10000.f); //set the projection, we want to be perspective
 
-	// Ambient light
-	ambient_light = Vector3(0.5f, 0.5f, 0.5f);
-
 	{
 		// Texture loading
 		Texture* roughness_texture = Texture::Get("data/models/ball/roughness.png");
@@ -57,7 +54,8 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		Texture* normal_texture = Texture::Get("data/models/ball/normal.png");
 
 		// HDRE textures
-		HDRE* hdre = HDRE::Get("data/environments/pisa.hdre");
+		char* folder_name_hdre = "data/environments/pisa.hdre";
+		HDRE* hdre = HDRE::Get(folder_name_hdre);
 
 		// create an array to store all the hdre versions 
 		std::vector<Texture*> hdre_versions;
@@ -65,7 +63,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		// There are 5 levels: the original + 5 blurred versions
 		for (unsigned int LEVEL = 0; LEVEL < 6; LEVEL = LEVEL + 1) {
 			Texture* texture = new Texture();
-			//hdre_versions[LEVEL] = texture->cubemapFromHDRE(hdre, LEVEL);
+
 			texture->cubemapFromHDRE(hdre, LEVEL); // store this version to the array created before. 
 
 			hdre_versions.push_back(texture);
@@ -97,6 +95,15 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		// Light
 		light = new Light(Vector3(0.0f, 10.0f, 0.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), Vector3(1.0f, 1.0f, 1.0f), "Light");
 
+		// Skybox
+		StandardMaterial* skybox_mat = new SkyboxMaterial(folder_name_hdre, hdre_versions, hdre_versions[0]);
+
+		SceneNode* node_skybox = new SkyboxNode("skybox");
+		node_skybox->mesh = Mesh::Get("data/meshes/box.ASE.mbin");
+		node_skybox->material = skybox_mat;
+		node_skybox->model.setTranslation(camera->eye.x, camera->eye.y, camera->eye.z);
+
+		node_list.push_back(node_skybox);
 		node_list.push_back(ball_node);
 		node_list.push_back(light);
 	}
@@ -153,8 +160,8 @@ void Application::update(double seconds_elapsed)
 	}*/
 
 	// Update skybox position
-	//SkyboxNode* skybox = (SkyboxNode*)node_list[0];
-	//skybox->syncCameraPosition(camera->eye);
+	SkyboxNode* skybox = (SkyboxNode*)node_list[0];
+	skybox->syncCameraPosition(camera->eye);
 
 	//mouse input to rotate the cam
 	if ((Input::mouse_state & SDL_BUTTON_LEFT && !ImGui::IsAnyWindowHovered() 

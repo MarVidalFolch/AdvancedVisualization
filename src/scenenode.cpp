@@ -95,7 +95,7 @@ void Light::setUniforms() {
 	shader->setUniform("u_light_pos", model.getTranslation());
 	shader->setUniform("u_light_color", color);
 	shader->setUniform("u_light_intensity", intensity);
-	shader->setUniform("u_ambient_light", Application::instance->ambient_light);
+	//shader->setUniform("u_ambient_light", Application::instance->ambient_light);
 	shader->disable();
 }
 

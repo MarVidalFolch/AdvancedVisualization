@@ -100,9 +100,10 @@ void renderGUI(SDL_Window* window, Application * game)
 		ImGui::Text(getGPUStats().c_str());					   // Display some text (you can use a format strings too)
 		
 		if (ImGui::TreeNode("Scene")) {
-			ImGui::DragFloat("Exposure", &Application::instance->scene_exposure, 0.01f,-2, 2);
-			ImGui::DragFloat3("Ambient Light (Ia)", (float*)&Application::instance->ambient_light, 0.001f, 0.0, 1.0);
-			ImGui::Combo("Output", &Application::instance->output, "COMPLETE\0ALBEDO\0ROUGHNESS\0\METALNESS\0NORMALS\0");
+			Application* app = Application::instance;
+			ImGui::DragFloat("Exposure", &app->scene_exposure, 0.01f,-2, 2);
+			ImGui::Combo("Output", &app->output, "COMPLETE\0ALBEDO\0ROUGHNESS\0\METALNESS\0NORMALS\0");
+			ImGui::Checkbox("Grid", &app->render_debug);
 			ImGui::TreePop();
 		}
 

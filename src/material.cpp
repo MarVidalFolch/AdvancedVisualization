@@ -164,7 +164,7 @@ void PhongMaterial::renderInMenu() {
 	TextureMaterial::renderInMenu();
 }
 
-SkyboxMaterial::SkyboxMaterial(char* folder_texture, Texture* texture, Shader* shader) : TextureMaterial(texture) {
+SkyboxMaterial::SkyboxMaterial(char* folder_texture, std::vector<Texture*> hdre_versions, Texture* texture, Shader* shader) : TextureMaterial(texture) {
 	if (shader == NULL) {
 		this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/skybox.fs");
 	}
@@ -172,11 +172,12 @@ SkyboxMaterial::SkyboxMaterial(char* folder_texture, Texture* texture, Shader* s
 		this->shader = shader;
 	}
 	this->folder_index = getIndex(folder_names, folder_texture);
+	this->hdre_versions = hdre_versions;
 }
 
 void SkyboxMaterial::renderInMenu() {
 	bool changed = false;
-	changed |= ImGui::Combo("Skybox texture", (int*)&this->folder_index, "SNOW\0CITY\0DRAGON");
+	changed |= ImGui::Combo("Skybox texture", (int*)&this->folder_index, "PISA\0PANORAMA\0STUDIO\0");
 	if (changed) {
 		textureSkyboxUpdate();
 	}
@@ -184,7 +185,14 @@ void SkyboxMaterial::renderInMenu() {
 }
 
 void SkyboxMaterial::textureSkyboxUpdate() {
-	texture->cubemapFromImages(folder_names[folder_index]);
+	HDRE* hdre = HDRE::Get(folder_names[folder_index]);
+
+	// There are 5 levels: the original + 5 blurred versions
+	for (unsigned int LEVEL = 0; LEVEL < 6; LEVEL = LEVEL + 1) {
+		hdre_versions[LEVEL]->cubemapFromHDRE(hdre, LEVEL);
+	}
+
+	texture = hdre_versions[0];
 }
 
 

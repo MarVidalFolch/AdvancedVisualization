@@ -65,11 +65,12 @@ public:
 
 class SkyboxMaterial : public TextureMaterial {
 public:
-	std::vector<char*> folder_names = { "data/environments/snow", "data/environments/city", "data/environments/dragonvale"};
+	std::vector<char*> folder_names = { "data/environments/pisa.hdre", "data/environments/panorama.hdre", "data/environments/studio.hdre"};
 	int folder_index;
+	std::vector<Texture*> hdre_versions; // We save a pointer to the vectors, although we are only interested in the first position
 
 
-	SkyboxMaterial(char* folder_texture, Texture* texture = NULL, Shader* shader = NULL);
+	SkyboxMaterial(char* folder_texture, std::vector<Texture*> hdre_versions, Texture* texture = NULL, Shader* shader = NULL);
 	void renderInMenu();
 	void textureSkyboxUpdate();
 };
