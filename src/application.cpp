@@ -47,12 +47,6 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	camera->setPerspective(45.f,window_width/(float)window_height,0.1f,10000.f); //set the projection, we want to be perspective
 
 	{
-		// Texture loading
-		Texture* roughness_texture = Texture::Get("data/models/ball/roughness.png");
-		Texture* metalness_texture = Texture::Get("data/models/ball/metalness.png");
-		Texture* albedo_texture = Texture::Get("data/models/ball/albedo.png");
-		Texture* normal_texture = Texture::Get("data/models/ball/normal.png");
-
 		// HDRE textures
 		char* folder_name_hdre = "data/environments/pisa.hdre";
 		HDRE* hdre = HDRE::Get(folder_name_hdre);
@@ -72,6 +66,13 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		// LUT
 		Texture* brdfLUT_texture = Texture::Get("data/brdfLUT.png");
 
+		// SPHERE______________
+		// Texture loading
+		Texture* roughness_texture = Texture::Get("data/models/ball/roughness.png");
+		Texture* metalness_texture = Texture::Get("data/models/ball/metalness.png");
+		Texture* albedo_texture = Texture::Get("data/models/ball/albedo.png");
+		Texture* normal_texture = Texture::Get("data/models/ball/normal.png");
+
 		// Material 
 		PBRMaterial* ball_mat = new PBRMaterial(0.0f, 1.0f);
 		ball_mat->roughness_texture = roughness_texture;
@@ -85,11 +86,38 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		// Mesh Loading
 		Mesh* ball_mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
 
-		SceneNode* ball_node = new PBRNode("Ball node");
+		SceneNode* ball_node = new PBRNode("Ball");
 
 		ball_node->material = (Material*)ball_mat;
 		ball_node->mesh = ball_mesh;
+		ball_node->model.setTranslation(7.0f, 0.0f, 0.0f);
 		ball_node->model.scale(1.0f, 1.0f, 1.0f);
+
+		// Lantern______________
+		// Texture loading
+		Texture* roughness_texture_lantern = Texture::Get("data/models/lantern/roughness.png");
+		Texture* metalness_texture_lantern = Texture::Get("data/models/lantern/metalness.png");
+		Texture* albedo_texture_lantern = Texture::Get("data/models/lantern/albedo.png");
+		Texture* normal_texture_lantern = Texture::Get("data/models/lantern/normal.png");
+
+		// Material 
+		PBRMaterial* lantern_mat = new PBRMaterial(0.5f, 1.0f);
+		lantern_mat->roughness_texture = roughness_texture_lantern;
+		lantern_mat->metalness_texture = metalness_texture_lantern;
+		lantern_mat->albedo_texture = albedo_texture_lantern;
+		lantern_mat->normal_texture = normal_texture_lantern;
+		lantern_mat->hdre_versions_environment = hdre_versions;
+		lantern_mat->brdfLUT_texture = brdfLUT_texture;
+
+
+		// Mesh Loading
+		Mesh* lantern_mesh = Mesh::Get("data/models/lantern/lantern.obj.mbin");
+
+		SceneNode* lantern_node = new PBRNode("Lantern");
+
+		lantern_node->material = (Material*)lantern_mat;
+		lantern_node->mesh = lantern_mesh;
+		lantern_node->model.scale(0.05f, 0.05f, 0.05f);
 
     
 		// Light
@@ -105,6 +133,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 
 		node_list.push_back(node_skybox);
 		node_list.push_back(ball_node);
+		node_list.push_back(lantern_node);
 		node_list.push_back(light);
 	}
 	
