@@ -28,7 +28,9 @@ enum class TextureSlots {
 	HDRE_L2 = 7,
 	HDRE_L3 = 8,
 	HDRE_L4 = 9,
-	BRDF_LUT = 10
+	BRDF_LUT = 10,
+	AO = 11,
+	OPPACITY = 12
 };
 
 //Simple class to handle images (stores RGBA always)

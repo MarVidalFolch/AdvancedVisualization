@@ -89,6 +89,10 @@ public:
 	Texture* metalness_texture;
 	Texture* albedo_texture;
 	Texture* normal_texture;
+	Texture* ambient_occlusion_texture;
+	Texture* oppacity_texture;
+	bool is_ao_texture; // Ambient occlusion flag
+	bool is_op_texture; // Oppacity map flag
 	float roughness_factor;
 	float metalness_factor;
 

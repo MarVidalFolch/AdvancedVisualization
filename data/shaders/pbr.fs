@@ -21,6 +21,10 @@ uniform sampler2D u_metalness_texture;
 uniform float u_metalness_factor;
 uniform sampler2D u_albedo_texture;
 uniform sampler2D u_normal_texture;
+uniform sampler2D u_ao_texture;
+uniform sampler2D u_oppacity_texture;
+uniform bool u_is_ao;
+uniform bool u_is_oppacity;
 uniform vec4 u_color;
 
 uniform vec4 u_light_color;
@@ -108,7 +112,7 @@ void computeVectors(){
 	
 	// Normal vector
 	vec3 normal_pixel = texture2D(u_normal_texture, v_uv).xyz;
-	vectors.N = perturbNormal( v_normal, vectors.V, v_uv, normal_pixel );
+	vectors.N = perturbNormal( normalize(v_normal), vectors.V, v_uv, normal_pixel );
 	
 	// Reflected ray 
 	vectors.R = reflect(-vectors.V, vectors.N);
@@ -134,7 +138,7 @@ vec3 linear_to_gamma(vec3 color)
 }
 
 void getMaterialProperties(){
-	pbr_mat.roughness = u_roughness_factor*texture2D(u_roughness_texture, v_uv).x;
+	pbr_mat.roughness = u_roughness_factor*texture2D(u_roughness_texture, v_uv).z;
 	pbr_mat.metalness = u_metalness_factor*texture2D(u_metalness_texture, v_uv).x;
 	
 	pbr_mat.base_color = texture2D(u_albedo_texture, v_uv);
@@ -257,11 +261,11 @@ void main(){
 	// IBL indirect light
 	vec3 specularSample = getReflectionColor(vectors.R, pbr_mat.roughness);
 	
-	float NdotV = clamp(dot(vectors.N,vectors.V), 0.0, 1.0);
+	float NdotV = clamp(dot(vectors.N,vectors.V), 0.1, 0.99);
+	float roughness_ibl = clamp(pbr_mat.roughness, 0.1, 0.99);
+	vec3 brdf2D = texture2D(u_brdf_lut, vec2(NdotV, roughness_ibl)).xyz;
 	
-	vec3 brdf2D = texture2D(u_brdf_lut, vec2(NdotV, pbr_mat.roughness)).xyz;
-	
-	float cosTheta = max(dot(vectors.N, vectors.L), 0.0);
+	float cosTheta = max(dot(vectors.N, vectors.V), 0.0);
 	vec3 F = FresnelSchlickRoughness(cosTheta, pbr_mat.F0, pbr_mat.roughness);
 	vec3 SpecularBRDF = F * brdf2D.x + brdf2D.y;
 	vec3 SpecularIBL = specularSample * SpecularBRDF;
@@ -274,14 +278,23 @@ void main(){
 	
 	vec3 ibl_term = SpecularIBL + DiffuseIBL;
 	
+	if (u_is_ao){
+		ibl_term *= texture2D(u_ao_texture, v_uv).xyz;
+	}
 	
-	// Final light
+	// Final lightd
 	vec3 light = u_light_intensity * u_light_color.xyz * pbr_term * dp.NdotL + ibl_term;
 	
-	vec3 pixelColor = toneMap(light);
+	vec3 pixelColor = toneMapUncharted(light);
 	
 	pixelColor = linear_to_gamma(pixelColor);
 	
-	gl_FragColor.xyz = pixelColor;
+	// Get opaccity
+	float alpha = 1.0;
+	if(u_is_oppacity){
+		alpha = texture2D(u_oppacity_texture, v_uv).x;
+	}
+	
+	gl_FragColor = vec4(pixelColor, alpha);
 	
 }

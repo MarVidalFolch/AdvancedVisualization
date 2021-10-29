@@ -222,6 +222,8 @@ PBRMaterial::PBRMaterial(float roughness_factor, float metalness_factor) {
 	
 	this->roughness_factor = roughness_factor;
 	this->metalness_factor= metalness_factor;
+	this->is_ao_texture = false;
+	this->is_op_texture = false;
 
 }
 
@@ -231,8 +233,17 @@ void PBRMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	shader->setUniform("u_metalness_texture", metalness_texture, (int)TextureSlots::METALNESS);
 	shader->setUniform("u_normal_texture", normal_texture, (int)TextureSlots::NORMAL);
 	shader->setUniform("u_albedo_texture", albedo_texture, (int)TextureSlots::ALBEDO);
+	if(is_ao_texture)
+		shader->setUniform("u_ao_texture", ambient_occlusion_texture, (int)TextureSlots::AO);
+	if (is_op_texture) {
+		shader->setUniform("u_oppacity_texture", oppacity_texture, (int)TextureSlots::OPPACITY);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	}
 	shader->setUniform("u_roughness_factor", roughness_factor);
 	shader->setUniform("u_metalness_factor", metalness_factor);
+	shader->setUniform("u_is_ao", is_ao_texture);
+	shader->setUniform("u_is_oppacity", is_op_texture);
 
 	// HDRE environment
 	shader->setUniform("u_hdre_texture_original", hdre_versions_environment[0], (int)TextureSlots::HDRE_ORIG);

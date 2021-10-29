@@ -99,6 +99,8 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		Texture* metalness_texture_lantern = Texture::Get("data/models/lantern/metalness.png");
 		Texture* albedo_texture_lantern = Texture::Get("data/models/lantern/albedo.png");
 		Texture* normal_texture_lantern = Texture::Get("data/models/lantern/normal.png");
+		Texture* ao_texture_lantern = Texture::Get("data/models/lantern/ao.png");
+		Texture* oppacity_texture_lantern = Texture::Get("data/models/lantern/opacity.png");
 
 		// Material 
 		PBRMaterial* lantern_mat = new PBRMaterial(0.5f, 1.0f);
@@ -106,6 +108,10 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		lantern_mat->metalness_texture = metalness_texture_lantern;
 		lantern_mat->albedo_texture = albedo_texture_lantern;
 		lantern_mat->normal_texture = normal_texture_lantern;
+		lantern_mat->ambient_occlusion_texture = ao_texture_lantern;
+		lantern_mat->is_ao_texture = true;
+		lantern_mat->oppacity_texture = oppacity_texture_lantern;
+		lantern_mat->is_op_texture = true;
 		lantern_mat->hdre_versions_environment = hdre_versions;
 		lantern_mat->brdfLUT_texture = brdfLUT_texture;
 
