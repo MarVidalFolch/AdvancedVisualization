@@ -96,13 +96,17 @@ public:
 	float roughness_factor;
 	float metalness_factor;
 
+	// COntrol parameters
+	float ibl_scale;
+	float direct_scale;
+
 	Texture* brdfLUT_texture;
 	std::vector<Texture*> hdre_versions_environment;
 
 	PBRMaterial(char* filename_texture, Texture* texture = NULL);
 	PBRMaterial(float roughness_factor, float metalness_factor);
-	//void renderInMenu();
 	void setUniforms(Camera* camera, Matrix44 model);
+	void render(Mesh* mesh, Matrix44 model, Camera* camera);
 	void renderInMenu();
 };
 

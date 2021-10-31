@@ -32,6 +32,9 @@ uniform vec3 u_light_intensity;
 uniform vec3 u_light_pos;
 uniform vec3 u_ambient_light;
 
+uniform float u_ibl_scale;
+uniform float u_direct_scale;
+
 uniform vec3 u_camera_position;
 
 varying vec3 v_position;
@@ -52,7 +55,7 @@ struct PBRMat
 	float roughness;
 	float metalness;
 	vec4 base_color;
-	vec3 c_diff;
+	vec3 f_lambert;
 	vec3 F0;	
 }pbr_mat;
 
@@ -145,7 +148,7 @@ void getMaterialProperties(){
 	
 	pbr_mat.base_color.xyz = gamma_to_linear(pbr_mat.base_color.xyz);
 	
-	pbr_mat.c_diff = mix(pbr_mat.base_color.rgb, vec3(0.0), pbr_mat.metalness);
+	pbr_mat.f_lambert = mix(pbr_mat.base_color.rgb, vec3(0.0), pbr_mat.metalness) * RECIPROCAL_PI;
 	pbr_mat.F0 = mix(vec3(0.04), pbr_mat.base_color.rgb, pbr_mat.metalness);
 }
 
@@ -193,9 +196,6 @@ float BeckmanTowebrigdeDistributionFunction(){
 vec3 getPixelColor(){
 	float NdotL = dp.NdotL;
 	float NdotV = dp.NdotV;
-
-	// PBR diffuse
-	vec3 f_lambert = pbr_mat.c_diff * RECIPROCAL_PI;
 	
 	// PBR Specular
 	vec3 F = FresnelSchlickRoughness(NdotL, pbr_mat.F0, pbr_mat.roughness);
@@ -204,7 +204,7 @@ vec3 getPixelColor(){
 	
 	vec3 specular_amount = F*G*D / (4.0*NdotL*NdotV);
 	
-	return f_lambert + specular_amount;
+	return pbr_mat.f_lambert + specular_amount;
 	
 }
 
@@ -256,7 +256,7 @@ void main(){
 	getMaterialProperties();
 	
 	// PBR direct light
-	vec3 pbr_term = getPixelColor();
+	vec3 pbr_term = u_direct_scale * getPixelColor();
 	
 	// IBL indirect light
 	vec3 specularSample = getReflectionColor(vectors.R, pbr_mat.roughness);
@@ -265,18 +265,17 @@ void main(){
 	float roughness_ibl = clamp(pbr_mat.roughness, 0.1, 0.99);
 	vec3 brdf2D = texture2D(u_brdf_lut, vec2(NdotV, roughness_ibl)).xyz;
 	
-	float cosTheta = max(dot(vectors.N, vectors.V), 0.0);
-	vec3 F = FresnelSchlickRoughness(cosTheta, pbr_mat.F0, pbr_mat.roughness);
+	vec3 F = FresnelSchlickRoughness(dp.VdotH, pbr_mat.F0, pbr_mat.roughness);
 	vec3 SpecularBRDF = F * brdf2D.x + brdf2D.y;
 	vec3 SpecularIBL = specularSample * SpecularBRDF;
 	
 	vec3 diffuseSample = getReflectionColor(vectors.N, pbr_mat.roughness);
-	vec3 difusseColor = pbr_mat.c_diff;
+	vec3 difusseColor = pbr_mat.f_lambert;
 	vec3 DiffuseIBL = diffuseSample * difusseColor;
 	
 	DiffuseIBL *= (1.0-F);
 	
-	vec3 ibl_term = SpecularIBL + DiffuseIBL;
+	vec3 ibl_term = u_ibl_scale * (SpecularIBL + DiffuseIBL);
 	
 	if (u_is_ao){
 		ibl_term *= texture2D(u_ao_texture, v_uv).xyz;

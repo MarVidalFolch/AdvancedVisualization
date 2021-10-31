@@ -224,6 +224,8 @@ PBRMaterial::PBRMaterial(float roughness_factor, float metalness_factor) {
 	this->metalness_factor= metalness_factor;
 	this->is_ao_texture = false;
 	this->is_op_texture = false;
+	this->ibl_scale = 1.0f;
+	this->direct_scale = 1.0f;
 
 }
 
@@ -255,12 +257,30 @@ void PBRMaterial::setUniforms(Camera* camera, Matrix44 model) {
 
 	// BRDF LUT
 	shader->setUniform("u_brdf_lut", brdfLUT_texture, (int)TextureSlots::BRDF_LUT);
+
+	// Control parameters
+	shader->setUniform("u_ibl_scale", ibl_scale);
+	shader->setUniform("u_direct_scale", direct_scale);
+
 }
 
 void PBRMaterial::renderInMenu() {
-	ImGui::DragFloat("Roughness factor", &this->roughness_factor, 0.0025f, 0.0f, 2.0f);
-	ImGui::DragFloat("Metalness factor", &this->metalness_factor, 0.0025f, 0.0f, 1.0f);
-	//ImGui::DragFloat3("Color", &this->color)
+	ImGui::SliderFloat("Roughness factor", &this->roughness_factor, 0.0f, 2.0f);
+	ImGui::SliderFloat("Metalness factor", &this->metalness_factor, 0.0f, 1.0f);
+	ImGui::ColorEdit4("Color", (float*)&this->color);
+	ImGui::SliderFloat("IBL scale", &this->ibl_scale, 0.0f, 1.0f);
+	ImGui::SliderFloat("Direct light scale", &this->direct_scale, 0.0f, 1.0f);
 
 
+}
+
+void PBRMaterial::render(Mesh* mesh, Matrix44 model, Camera* camera) {
+	if (is_op_texture) {
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+	}
+
+	StandardMaterial::render(mesh, model, camera);
+	
+	glDisable(GL_CULL_FACE);
 }
