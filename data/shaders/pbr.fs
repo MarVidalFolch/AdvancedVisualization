@@ -193,21 +193,6 @@ float BeckmanTowebrigdeDistributionFunction(){
 
 }
 
-vec3 getPixelColor(){
-	float NdotL = dp.NdotL;
-	float NdotV = dp.NdotV;
-	
-	// PBR Specular
-	vec3 F = FresnelSchlickRoughness(NdotL, pbr_mat.F0, pbr_mat.roughness);
-	float G = EpicNotesGeometricFunction();
-	float D = BeckmanTowebrigdeDistributionFunction();
-	
-	vec3 specular_amount = F*G*D / (4.0*NdotL*NdotV);
-	
-	return pbr_mat.f_lambert + specular_amount;
-	
-}
-
 vec3 getReflectionColor(vec3 r, float roughness)
 {
 	float lod = roughness * 5.0;
@@ -251,17 +236,11 @@ vec3 toneMap(vec3 color)
     return color / (color + vec3(1.0));
 }
 
-void main(){
-	computeVectors();
-	getMaterialProperties();
-	
-	// PBR direct light
-	vec3 pbr_term = u_direct_scale * getPixelColor();
-	
+vec3 iblCompute(){
 	// IBL indirect light
 	vec3 specularSample = getReflectionColor(vectors.R, pbr_mat.roughness);
 	
-	float NdotV = clamp(dot(vectors.N,vectors.V), 0.1, 0.99);
+	float NdotV = clamp(dp.NdotV, 0.1, 0.99);
 	float roughness_ibl = clamp(pbr_mat.roughness, 0.1, 0.99);
 	vec3 brdf2D = texture2D(u_brdf_lut, vec2(NdotV, roughness_ibl)).xyz;
 	
@@ -280,19 +259,57 @@ void main(){
 	if (u_is_ao){
 		ibl_term *= texture2D(u_ao_texture, v_uv).xyz;
 	}
+	return ibl_term;
+}
+
+vec3 directLightCompute(){
+	float NdotL = dp.NdotL;
+	float NdotV = dp.NdotV;
 	
-	// Final lightd
+	// PBR Specular
+	vec3 F = FresnelSchlickRoughness(NdotL, pbr_mat.F0, pbr_mat.roughness);
+	float G = EpicNotesGeometricFunction();
+	float D = BeckmanTowebrigdeDistributionFunction();
+	
+	vec3 specular_amount = F*G*D / (4.0*NdotL*NdotV);
+	
+	vec3 pbr_term = pbr_mat.f_lambert + specular_amount;
+	
+	return u_direct_scale * pbr_term;
+	
+}
+
+vec3 getPixelColor(){
+	// PBR direct light
+	vec3 pbr_term = directLightCompute();
+	
+	// IBL 
+	vec3 ibl_term = iblCompute();
+	
+	// Final light
 	vec3 light = u_light_intensity * u_light_color.xyz * pbr_term * dp.NdotL + ibl_term;
 	
 	vec3 pixelColor = toneMapUncharted(light);
 	
-	pixelColor = linear_to_gamma(pixelColor);
+	return linear_to_gamma(pixelColor);
 	
-	// Get opaccity
-	float alpha = 1.0;
-	if(u_is_oppacity){
-		alpha = texture2D(u_oppacity_texture, v_uv).x;
+}
+
+float computeOpacity(){
+	if(!u_is_oppacity){
+		return 1.0;
 	}
+	
+	return texture2D(u_oppacity_texture, v_uv).x;
+}
+	
+
+void main(){
+	computeVectors();
+	getMaterialProperties();
+	vec3 pixelColor = getPixelColor();
+	
+	float alpha = computeOpacity();
 	
 	gl_FragColor = vec4(pixelColor, alpha);
 	
