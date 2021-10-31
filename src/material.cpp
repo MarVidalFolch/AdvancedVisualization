@@ -262,12 +262,15 @@ void PBRMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	shader->setUniform("u_ibl_scale", ibl_scale);
 	shader->setUniform("u_direct_scale", direct_scale);
 
+	// Output control
+	shader->setUniform("u_output", Application::instance->output);
+
 }
 
 void PBRMaterial::renderInMenu() {
+	ImGui::ColorEdit4("Color", (float*)&this->color);
 	ImGui::SliderFloat("Roughness factor", &this->roughness_factor, 0.0f, 2.0f);
 	ImGui::SliderFloat("Metalness factor", &this->metalness_factor, 0.0f, 1.0f);
-	ImGui::ColorEdit4("Color", (float*)&this->color);
 	ImGui::SliderFloat("IBL scale", &this->ibl_scale, 0.0f, 1.0f);
 	ImGui::SliderFloat("Direct light scale", &this->direct_scale, 0.0f, 1.0f);
 

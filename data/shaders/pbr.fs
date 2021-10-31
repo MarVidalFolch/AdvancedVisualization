@@ -37,6 +37,8 @@ uniform float u_direct_scale;
 
 uniform vec3 u_camera_position;
 
+uniform float u_output;
+
 varying vec3 v_position;
 varying vec3 v_world_position;
 varying vec3 v_normal;
@@ -144,7 +146,7 @@ void getMaterialProperties(){
 	pbr_mat.roughness = u_roughness_factor*texture2D(u_roughness_texture, v_uv).z;
 	pbr_mat.metalness = u_metalness_factor*texture2D(u_metalness_texture, v_uv).x;
 	
-	pbr_mat.base_color = texture2D(u_albedo_texture, v_uv);
+	pbr_mat.base_color = texture2D(u_albedo_texture, v_uv) * u_color;
 	
 	pbr_mat.base_color.xyz = gamma_to_linear(pbr_mat.base_color.xyz);
 	
@@ -279,7 +281,15 @@ vec3 directLightCompute(){
 	
 }
 
-vec3 getPixelColor(){
+float computeOpacity(){
+	if(!u_is_oppacity){
+		return 1.0;
+	}
+	
+	return texture2D(u_oppacity_texture, v_uv).x;
+}
+
+vec4 getPixelColor(){
 	// PBR direct light
 	vec3 pbr_term = directLightCompute();
 	
@@ -291,26 +301,41 @@ vec3 getPixelColor(){
 	
 	vec3 pixelColor = toneMapUncharted(light);
 	
-	return linear_to_gamma(pixelColor);
+	pixelColor = linear_to_gamma(pixelColor);
+	
+	float alpha = computeOpacity();
+	
+	return vec4(pixelColor, alpha);
 	
 }
 
-float computeOpacity(){
-	if(!u_is_oppacity){
-		return 1.0;
+
+vec4 outputSelector(){
+	if(u_output == 0){
+		return getPixelColor();
 	}
-	
-	return texture2D(u_oppacity_texture, v_uv).x;
+	else if(u_output == 1){
+		return pbr_mat.base_color;
+	}
+	else if(u_output == 2){
+		return vec4(vec3(pbr_mat.roughness), 1.0);
+	}
+	else if(u_output == 3){
+		return vec4(vec3(pbr_mat.metalness), 1.0);
+	}
+	else if(u_output == 4){
+		return vec4(vectors.N, 1.0);
+	}
+	return getPixelColor();
+
 }
+
 	
 
 void main(){
 	computeVectors();
 	getMaterialProperties();
-	vec3 pixelColor = getPixelColor();
 	
-	float alpha = computeOpacity();
-	
-	gl_FragColor = vec4(pixelColor, alpha);
+	gl_FragColor = outputSelector();
 	
 }
