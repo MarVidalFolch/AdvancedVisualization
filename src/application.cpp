@@ -74,7 +74,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		Texture* normal_texture = Texture::Get("data/models/ball/normal.png");
 
 		// Material 
-		PBRMaterial* ball_mat = new PBRMaterial(0.0f, 1.0f);
+		PBRMaterial* ball_mat = new PBRMaterial(1.0f, 1.0f);
 		ball_mat->roughness_texture = roughness_texture;
 		ball_mat->metalness_texture = metalness_texture;
 		ball_mat->albedo_texture = albedo_texture;
@@ -103,7 +103,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		Texture* oppacity_texture_lantern = Texture::Get("data/models/lantern/opacity.png");
 
 		// Material 
-		PBRMaterial* lantern_mat = new PBRMaterial(0.5f, 1.0f);
+		PBRMaterial* lantern_mat = new PBRMaterial(1.0f, 1.0f);
 		lantern_mat->roughness_texture = roughness_texture_lantern;
 		lantern_mat->metalness_texture = metalness_texture_lantern;
 		lantern_mat->albedo_texture = albedo_texture_lantern;
