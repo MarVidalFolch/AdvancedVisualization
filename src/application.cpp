@@ -47,100 +47,16 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	camera->setPerspective(45.f,window_width/(float)window_height,0.1f,10000.f); //set the projection, we want to be perspective
 
 	{
-		// HDRE textures
-		char* folder_name_hdre = "data/environments/pisa.hdre";
-		HDRE* hdre = HDRE::Get(folder_name_hdre);
+	
 
-		// create an array to store all the hdre versions 
-		std::vector<Texture*> hdre_versions;
+		// AQUÍ
+		Volume* volume = new Volume();
+		volume->loadPNG("data/volumes/teapot_16_16.png", 16, 16);
 
-		// There are 5 levels: the original + 5 blurred versions
-		for (unsigned int LEVEL = 0; LEVEL < 6; LEVEL = LEVEL + 1) {
-			Texture* texture = new Texture();
-
-			texture->cubemapFromHDRE(hdre, LEVEL); // store this version to the array created before. 
-
-			hdre_versions.push_back(texture);
-		}
-
-		// LUT
-		Texture* brdfLUT_texture = Texture::Get("data/brdfLUT.png");
-
-		// SPHERE______________
-		// Texture loading
-		Texture* roughness_texture = Texture::Get("data/models/ball/roughness.png");
-		Texture* metalness_texture = Texture::Get("data/models/ball/metalness.png");
-		Texture* albedo_texture = Texture::Get("data/models/ball/albedo.png");
-		Texture* normal_texture = Texture::Get("data/models/ball/normal.png");
-
-		// Material 
-		PBRMaterial* ball_mat = new PBRMaterial(1.0f, 1.0f);
-		ball_mat->roughness_texture = roughness_texture;
-		ball_mat->metalness_texture = metalness_texture;
-		ball_mat->albedo_texture = albedo_texture;
-		ball_mat->normal_texture = normal_texture;
-		ball_mat->hdre_versions_environment = hdre_versions;
-		ball_mat->brdfLUT_texture = brdfLUT_texture;
-
-
-		// Mesh Loading
-		Mesh* ball_mesh = Mesh::Get("data/meshes/sphere.obj.mbin");
-
-		SceneNode* ball_node = new PBRNode("Ball");
-
-		ball_node->material = (Material*)ball_mat;
-		ball_node->mesh = ball_mesh;
-		ball_node->model.setTranslation(7.0f, 0.0f, 0.0f);
-		ball_node->model.scale(1.0f, 1.0f, 1.0f);
-
-		// Lantern______________
-		// Texture loading
-		Texture* roughness_texture_lantern = Texture::Get("data/models/lantern/roughness.png");
-		Texture* metalness_texture_lantern = Texture::Get("data/models/lantern/metalness.png");
-		Texture* albedo_texture_lantern = Texture::Get("data/models/lantern/albedo.png");
-		Texture* normal_texture_lantern = Texture::Get("data/models/lantern/normal.png");
-		Texture* ao_texture_lantern = Texture::Get("data/models/lantern/ao.png");
-		Texture* oppacity_texture_lantern = Texture::Get("data/models/lantern/opacity.png");
-
-		// Material 
-		PBRMaterial* lantern_mat = new PBRMaterial(1.0f, 1.0f);
-		lantern_mat->roughness_texture = roughness_texture_lantern;
-		lantern_mat->metalness_texture = metalness_texture_lantern;
-		lantern_mat->albedo_texture = albedo_texture_lantern;
-		lantern_mat->normal_texture = normal_texture_lantern;
-		lantern_mat->ambient_occlusion_texture = ao_texture_lantern;
-		lantern_mat->is_ao_texture = true;
-		lantern_mat->oppacity_texture = oppacity_texture_lantern;
-		lantern_mat->is_op_texture = true;
-		lantern_mat->hdre_versions_environment = hdre_versions;
-		lantern_mat->brdfLUT_texture = brdfLUT_texture;
-
-
-		// Mesh Loading
-		Mesh* lantern_mesh = Mesh::Get("data/models/lantern/lantern.obj.mbin");
-
-		SceneNode* lantern_node = new PBRNode("Lantern");
-
-		lantern_node->material = (Material*)lantern_mat;
-		lantern_node->mesh = lantern_mesh;
-		lantern_node->model.scale(0.05f, 0.05f, 0.05f);
-
-    
-		// Light
-		light = new Light(Vector3(0.0f, 10.0f, 0.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), Vector3(1.0f, 1.0f, 1.0f), "Light");
-
-		// Skybox
-		StandardMaterial* skybox_mat = new SkyboxMaterial(folder_name_hdre, hdre_versions, hdre_versions[0]);
-
-		SceneNode* node_skybox = new SkyboxNode("skybox");
-		node_skybox->mesh = Mesh::Get("data/meshes/box.ASE.mbin");
-		node_skybox->material = skybox_mat;
-		node_skybox->model.setTranslation(camera->eye.x, camera->eye.y, camera->eye.z);
-
-		node_list.push_back(node_skybox);
-		node_list.push_back(ball_node);
-		node_list.push_back(lantern_node);
-		node_list.push_back(light);
+		//node_list.push_back(node_skybox);
+		//node_list.push_back(ball_node);
+		//node_list.push_back(lantern_node);
+		//node_list.push_back(light);
 	}
 	
 	//hide the cursor
@@ -195,8 +111,8 @@ void Application::update(double seconds_elapsed)
 	}*/
 
 	// Update skybox position
-	SkyboxNode* skybox = (SkyboxNode*)node_list[0];
-	skybox->syncCameraPosition(camera->eye);
+	//SkyboxNode* skybox = (SkyboxNode*)node_list[0];
+	//skybox->syncCameraPosition(camera->eye);
 
 	//mouse input to rotate the cam
 	if ((Input::mouse_state & SDL_BUTTON_LEFT && !ImGui::IsAnyWindowHovered() 

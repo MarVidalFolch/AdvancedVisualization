@@ -42,6 +42,9 @@ public:
 	void fillSphere();
 	void fillNoise(float frequency, int octaves, unsigned int seed, unsigned int channel = 1); //Channel 1 for R to 4 for A
 	void fillWorleyNoise(unsigned int cellsPerSide = 4, unsigned int channel = 1); //Channel 1 for R to 4 for A
+
+	bool loadPNG(const char* filename, unsigned int rows = 16, unsigned int columns = 16);
+
 };
 
 #endif
