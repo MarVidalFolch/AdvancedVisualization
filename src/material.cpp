@@ -164,7 +164,7 @@ void PhongMaterial::renderInMenu() {
 	TextureMaterial::renderInMenu();
 }
 
-SkyboxMaterial::SkyboxMaterial(char* folder_texture, Texture* texture, Shader* shader) : TextureMaterial(texture) {
+SkyboxMaterial::SkyboxMaterial(char* folder_texture, std::vector<Texture*> hdre_versions, Texture* texture, Shader* shader) : TextureMaterial(texture) {
 	if (shader == NULL) {
 		this->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/skybox.fs");
 	}
@@ -172,11 +172,12 @@ SkyboxMaterial::SkyboxMaterial(char* folder_texture, Texture* texture, Shader* s
 		this->shader = shader;
 	}
 	this->folder_index = getIndex(folder_names, folder_texture);
+	this->hdre_versions = hdre_versions;
 }
 
 void SkyboxMaterial::renderInMenu() {
 	bool changed = false;
-	changed |= ImGui::Combo("Skybox texture", (int*)&this->folder_index, "SNOW\0CITY\0DRAGON");
+	changed |= ImGui::Combo("Skybox texture", (int*)&this->folder_index, "PISA\0PANORAMA\0STUDIO\0");
 	if (changed) {
 		textureSkyboxUpdate();
 	}
@@ -184,7 +185,14 @@ void SkyboxMaterial::renderInMenu() {
 }
 
 void SkyboxMaterial::textureSkyboxUpdate() {
-	texture->cubemapFromImages(folder_names[folder_index]);
+	HDRE* hdre = HDRE::Get(folder_names[folder_index]);
+
+	// There are 5 levels: the original + 5 blurred versions
+	for (unsigned int LEVEL = 0; LEVEL < 6; LEVEL = LEVEL + 1) {
+		hdre_versions[LEVEL]->cubemapFromHDRE(hdre, LEVEL);
+	}
+
+	texture = hdre_versions[0];
 }
 
 
@@ -214,6 +222,10 @@ PBRMaterial::PBRMaterial(float roughness_factor, float metalness_factor) {
 	
 	this->roughness_factor = roughness_factor;
 	this->metalness_factor= metalness_factor;
+	this->is_ao_texture = false;
+	this->is_op_texture = false;
+	this->ibl_scale = 1.0f;
+	this->direct_scale = 1.0f;
 
 }
 
@@ -221,9 +233,19 @@ void PBRMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	StandardMaterial::setUniforms(camera, model);
 	shader->setUniform("u_roughness_texture", roughness_texture, (int)TextureSlots::ROUGHNESS);
 	shader->setUniform("u_metalness_texture", metalness_texture, (int)TextureSlots::METALNESS);
+	shader->setUniform("u_normal_texture", normal_texture, (int)TextureSlots::NORMAL);
 	shader->setUniform("u_albedo_texture", albedo_texture, (int)TextureSlots::ALBEDO);
+	if(is_ao_texture)
+		shader->setUniform("u_ao_texture", ambient_occlusion_texture, (int)TextureSlots::AO);
+	if (is_op_texture) {
+		shader->setUniform("u_oppacity_texture", oppacity_texture, (int)TextureSlots::OPPACITY);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	}
 	shader->setUniform("u_roughness_factor", roughness_factor);
 	shader->setUniform("u_metalness_factor", metalness_factor);
+	shader->setUniform("u_is_ao", is_ao_texture);
+	shader->setUniform("u_is_oppacity", is_op_texture);
 
 	// HDRE environment
 	shader->setUniform("u_hdre_texture_original", hdre_versions_environment[0], (int)TextureSlots::HDRE_ORIG);
@@ -233,23 +255,35 @@ void PBRMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	shader->setUniform("u_hdre_texture_prem_3", hdre_versions_environment[4], (int)TextureSlots::HDRE_L3);
 	shader->setUniform("u_hdre_texture_prem_4", hdre_versions_environment[5], (int)TextureSlots::HDRE_L4);
 
-	/*for (int i = 0; i < hdre_versions_environment.size() - 1; i++) {
-		std::string texture_name = "u_hdre_texture_prem_" + std::to_string(i);
-		const char* final_name = texture_name.c_str();
-		shader->setUniform(final_name, hdre_versions_environment[i+1], (int)TextureSlots::HDRE_L0 + i);
-		std::cout << texture_name + "\n";
-		std::cout << (int)TextureSlots::HDRE_L0 + i;
-		std::cout << "\n\n";
-	}
-	*/
 	// BRDF LUT
 	shader->setUniform("u_brdf_lut", brdfLUT_texture, (int)TextureSlots::BRDF_LUT);
+
+	// Control parameters
+	shader->setUniform("u_ibl_scale", ibl_scale);
+	shader->setUniform("u_direct_scale", direct_scale);
+
+	// Output control
+	shader->setUniform("u_output", Application::instance->output);
+
 }
 
 void PBRMaterial::renderInMenu() {
-	ImGui::DragFloat("Roughness factor", &this->roughness_factor, 0.0025f, 0.0f, 2.0f);
-	ImGui::DragFloat("Metalness factor", &this->metalness_factor, 0.0025f, 0.0f, 1.0f);
-	//ImGui::DragFloat3("Color", &this->color)
+	ImGui::ColorEdit4("Color", (float*)&this->color);
+	ImGui::SliderFloat("Roughness factor", &this->roughness_factor, 0.0f, 2.0f);
+	ImGui::SliderFloat("Metalness factor", &this->metalness_factor, 0.0f, 1.0f);
+	ImGui::SliderFloat("IBL scale", &this->ibl_scale, 0.0f, 1.0f);
+	ImGui::SliderFloat("Direct light scale", &this->direct_scale, 0.0f, 1.0f);
 
 
+}
+
+void PBRMaterial::render(Mesh* mesh, Matrix44 model, Camera* camera) {
+	if (is_op_texture) {
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+	}
+
+	StandardMaterial::render(mesh, model, camera);
+	
+	glDisable(GL_CULL_FACE);
 }

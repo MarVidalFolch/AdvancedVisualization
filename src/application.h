@@ -38,7 +38,6 @@ public:
 	bool must_exit;
 	bool render_debug;
 	float scene_exposure;
-	Vector3 ambient_light;
 	int output;
 
 	//some vars

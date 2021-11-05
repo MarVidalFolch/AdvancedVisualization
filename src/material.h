@@ -65,11 +65,12 @@ public:
 
 class SkyboxMaterial : public TextureMaterial {
 public:
-	std::vector<char*> folder_names = { "data/environments/snow", "data/environments/city", "data/environments/dragonvale"};
+	std::vector<char*> folder_names = { "data/environments/pisa.hdre", "data/environments/panorama.hdre", "data/environments/studio.hdre"};
 	int folder_index;
+	std::vector<Texture*> hdre_versions; // We save a pointer to the vectors, although we are only interested in the first position
 
 
-	SkyboxMaterial(char* folder_texture, Texture* texture = NULL, Shader* shader = NULL);
+	SkyboxMaterial(char* folder_texture, std::vector<Texture*> hdre_versions, Texture* texture = NULL, Shader* shader = NULL);
 	void renderInMenu();
 	void textureSkyboxUpdate();
 };
@@ -87,17 +88,25 @@ public:
 	Texture* roughness_texture;
 	Texture* metalness_texture;
 	Texture* albedo_texture;
+	Texture* normal_texture;
+	Texture* ambient_occlusion_texture;
+	Texture* oppacity_texture;
+	bool is_ao_texture; // Ambient occlusion flag
+	bool is_op_texture; // Oppacity map flag
 	float roughness_factor;
 	float metalness_factor;
+
+	// COntrol parameters
+	float ibl_scale;
+	float direct_scale;
 
 	Texture* brdfLUT_texture;
 	std::vector<Texture*> hdre_versions_environment;
 
 	PBRMaterial(char* filename_texture, Texture* texture = NULL);
 	PBRMaterial(float roughness_factor, float metalness_factor);
-	//void renderInMenu();
-	void textureUpdate();
 	void setUniforms(Camera* camera, Matrix44 model);
+	void render(Mesh* mesh, Matrix44 model, Camera* camera);
 	void renderInMenu();
 };
 

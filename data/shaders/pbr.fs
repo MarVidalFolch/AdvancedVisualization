@@ -20,6 +20,11 @@ uniform float u_roughness_factor;
 uniform sampler2D u_metalness_texture;
 uniform float u_metalness_factor;
 uniform sampler2D u_albedo_texture;
+uniform sampler2D u_normal_texture;
+uniform sampler2D u_ao_texture;
+uniform sampler2D u_oppacity_texture;
+uniform bool u_is_ao;
+uniform bool u_is_oppacity;
 uniform vec4 u_color;
 
 uniform vec4 u_light_color;
@@ -27,7 +32,12 @@ uniform vec3 u_light_intensity;
 uniform vec3 u_light_pos;
 uniform vec3 u_ambient_light;
 
+uniform float u_ibl_scale;
+uniform float u_direct_scale;
+
 uniform vec3 u_camera_position;
+
+uniform float u_output;
 
 varying vec3 v_position;
 varying vec3 v_world_position;
@@ -47,7 +57,7 @@ struct PBRMat
 	float roughness;
 	float metalness;
 	vec4 base_color;
-	vec3 c_diff;
+	vec3 f_lambert;
 	vec3 F0;	
 }pbr_mat;
 
@@ -66,6 +76,38 @@ void computeDotProducts(vec3 N, vec3 L, vec3 V, vec3 H){
 	dp.VdotH = max(dot(V, H), epsilon);
 }
 
+//Javi Agenjo Snipet for Bump Mapping
+mat3 cotangent_frame(vec3 N, vec3 p, vec2 uv){
+	// get edge vectors of the pixel triangle
+	vec3 dp1 = dFdx( p );
+	vec3 dp2 = dFdy( p );
+	vec2 duv1 = dFdx( uv );
+	vec2 duv2 = dFdy( uv );
+
+	// solve the linear system
+	vec3 dp2perp = cross( dp2, N );
+	vec3 dp1perp = cross( N, dp1 );
+	vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+	vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
+
+	// construct a scale-invariant frame
+	float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
+	return mat3( T * invmax, B * invmax, N );
+}
+
+vec3 perturbNormal( vec3 N, vec3 V, vec2 texcoord, vec3 normal_pixel ){
+	#ifdef USE_POINTS
+	return N;
+	#endif
+
+	// assume N, the interpolated vertex normal and
+	// V, the view vector (vertex to eye)
+	
+	normal_pixel = normal_pixel * 255./127. - 128./127.;
+	mat3 TBN = cotangent_frame(N, V, texcoord);
+	return normalize(TBN * normal_pixel);
+}
+
 void computeVectors(){
 	// Light vector
 	vectors.L = normalize(u_light_pos - v_world_position);
@@ -74,7 +116,8 @@ void computeVectors(){
 	vectors.V = normalize(u_camera_position - v_world_position);
 	
 	// Normal vector
-	vectors.N = normalize(v_normal);
+	vec3 normal_pixel = texture2D(u_normal_texture, v_uv).xyz;
+	vectors.N = perturbNormal( normalize(v_normal), vectors.V, v_uv, normal_pixel );
 	
 	// Reflected ray 
 	vectors.R = reflect(-vectors.V, vectors.N);
@@ -100,14 +143,14 @@ vec3 linear_to_gamma(vec3 color)
 }
 
 void getMaterialProperties(){
-	pbr_mat.roughness = u_roughness_factor*texture2D(u_roughness_texture, v_uv).x;
+	pbr_mat.roughness = u_roughness_factor*texture2D(u_roughness_texture, v_uv).z;
 	pbr_mat.metalness = u_metalness_factor*texture2D(u_metalness_texture, v_uv).x;
 	
-	pbr_mat.base_color = texture2D(u_albedo_texture, v_uv);
+	pbr_mat.base_color = texture2D(u_albedo_texture, v_uv) * u_color;
 	
 	pbr_mat.base_color.xyz = gamma_to_linear(pbr_mat.base_color.xyz);
 	
-	pbr_mat.c_diff = mix(pbr_mat.base_color.rgb, vec3(0.0), pbr_mat.metalness);
+	pbr_mat.f_lambert = mix(pbr_mat.base_color.rgb, vec3(0.0), pbr_mat.metalness) * RECIPROCAL_PI;
 	pbr_mat.F0 = mix(vec3(0.04), pbr_mat.base_color.rgb, pbr_mat.metalness);
 }
 
@@ -150,24 +193,6 @@ float BeckmanTowebrigdeDistributionFunction(){
 	float denominator = pow(NdotH_sq*(alpha_sq-1.0)+1.0,2.0);
 	return alpha_sq*RECIPROCAL_PI/denominator;
 
-}
-
-vec3 getPixelColor(){
-	float NdotL = dp.NdotL;
-	float NdotV = dp.NdotV;
-
-	// PBR diffuse
-	vec3 f_lambert = pbr_mat.c_diff * RECIPROCAL_PI;
-	
-	// PBR Specular
-	vec3 F = FresnelSchlickRoughness(NdotL, pbr_mat.F0, pbr_mat.roughness);
-	float G = EpicNotesGeometricFunction();
-	float D = BeckmanTowebrigdeDistributionFunction();
-	
-	vec3 specular_amount = F*G*D / (4.0*NdotL*NdotV);
-	
-	return f_lambert + specular_amount;
-	
 }
 
 vec3 getReflectionColor(vec3 r, float roughness)
@@ -213,41 +238,104 @@ vec3 toneMap(vec3 color)
     return color / (color + vec3(1.0));
 }
 
-void main(){
-	computeVectors();
-	getMaterialProperties();
-	
-	// PBR direct light
-	vec3 pbr_term = getPixelColor();
-	
+vec3 iblCompute(){
 	// IBL indirect light
 	vec3 specularSample = getReflectionColor(vectors.R, pbr_mat.roughness);
 	
-	float NdotV = clamp(dot(vectors.N,vectors.V), 0.0, 1.0);
+	float NdotV = clamp(dp.NdotV, 0.1, 0.99);
+	float roughness_ibl = clamp(pbr_mat.roughness, 0.1, 0.99);
+	vec3 brdf2D = texture2D(u_brdf_lut, vec2(NdotV, roughness_ibl)).xyz;
 	
-	vec3 brdf2D = texture2D(u_brdf_lut, vec2(NdotV, pbr_mat.roughness)).xyz;
-	
-	float cosTheta = max(dot(vectors.N, vectors.L), 0.0);
-	vec3 F = FresnelSchlickRoughness(cosTheta, pbr_mat.F0, pbr_mat.roughness);
+	vec3 F = FresnelSchlickRoughness(dp.VdotH, pbr_mat.F0, pbr_mat.roughness);
 	vec3 SpecularBRDF = F * brdf2D.x + brdf2D.y;
 	vec3 SpecularIBL = specularSample * SpecularBRDF;
 	
 	vec3 diffuseSample = getReflectionColor(vectors.N, pbr_mat.roughness);
-	vec3 difusseColor = pbr_mat.c_diff;
+	vec3 difusseColor = pbr_mat.f_lambert;
 	vec3 DiffuseIBL = diffuseSample * difusseColor;
 	
 	DiffuseIBL *= (1.0-F);
 	
-	vec3 ibl_term = SpecularIBL + DiffuseIBL;
+	vec3 ibl_term = u_ibl_scale * (SpecularIBL + DiffuseIBL);
 	
+	if (u_is_ao){
+		ibl_term *= texture2D(u_ao_texture, v_uv).xyz;
+	}
+	return ibl_term;
+}
+
+vec3 directLightCompute(){
+	float NdotL = dp.NdotL;
+	float NdotV = dp.NdotV;
+	
+	// PBR Specular
+	vec3 F = FresnelSchlickRoughness(NdotL, pbr_mat.F0, pbr_mat.roughness);
+	float G = EpicNotesGeometricFunction();
+	float D = BeckmanTowebrigdeDistributionFunction();
+	
+	vec3 specular_amount = F*G*D / (4.0*NdotL*NdotV);
+	
+	vec3 pbr_term = pbr_mat.f_lambert + specular_amount;
+	
+	return u_direct_scale * pbr_term;
+	
+}
+
+float computeOpacity(){
+	if(!u_is_oppacity){
+		return 1.0;
+	}
+	
+	return texture2D(u_oppacity_texture, v_uv).x;
+}
+
+vec4 getPixelColor(){
+	// PBR direct light
+	vec3 pbr_term = directLightCompute();
+	
+	// IBL 
+	vec3 ibl_term = iblCompute();
 	
 	// Final light
 	vec3 light = u_light_intensity * u_light_color.xyz * pbr_term * dp.NdotL + ibl_term;
 	
-	vec3 pixelColor = toneMap(light);
+	vec3 pixelColor = toneMapUncharted(light);
 	
 	pixelColor = linear_to_gamma(pixelColor);
 	
-	gl_FragColor.xyz = pixelColor;
+	float alpha = computeOpacity();
+	
+	return vec4(pixelColor, alpha);
+	
+}
+
+
+vec4 outputSelector(){
+	if(u_output == 0){
+		return getPixelColor();
+	}
+	else if(u_output == 1){
+		return pbr_mat.base_color;
+	}
+	else if(u_output == 2){
+		return vec4(vec3(pbr_mat.roughness), 1.0);
+	}
+	else if(u_output == 3){
+		return vec4(vec3(pbr_mat.metalness), 1.0);
+	}
+	else if(u_output == 4){
+		return vec4(vectors.N, 1.0);
+	}
+	return getPixelColor();
+
+}
+
+	
+
+void main(){
+	computeVectors();
+	getMaterialProperties();
+	
+	gl_FragColor = outputSelector();
 	
 }
