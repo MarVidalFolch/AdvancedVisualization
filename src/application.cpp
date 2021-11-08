@@ -49,11 +49,34 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	{
 	
 
-		// AQUÍ
+		// Read the volume
 		Volume* volume = new Volume();
 		volume->loadPNG("data/volumes/teapot_16_16.png", 16, 16);
+		float volume_width = volume->width;
+		float volume_height = volume->height;
+		float volume_depth = volume->depth;
 
-		//node_list.push_back(node_skybox);
+		// Convert it to a 3D texture
+		Texture* volume_texture = new Texture();
+		volume_texture->create3DFromVolume(volume, GL_CLAMP_TO_EDGE);
+		
+		// Aux mesh
+		Mesh* cube = new Mesh();
+		cube->Mesh::createCube();
+
+		// Create volume material
+		float step_vector = 0.4;
+		VolumeMaterial* volume_mat = new VolumeMaterial(volume_texture, step_vector);
+
+		// Create Node material
+		SceneNode* volume_node = new SceneNode("Volume");
+		volume_node->material = volume_mat;
+		volume_node->mesh = cube;
+		//volume_node->model.scale(volume_width/2.0, volume_height / 2.0, volume_depth / 2.0);
+
+
+
+		node_list.push_back(volume_node);
 		//node_list.push_back(ball_node);
 		//node_list.push_back(lantern_node);
 		//node_list.push_back(light);
@@ -80,11 +103,7 @@ void Application::render(void)
 	glDisable(GL_CULL_FACE);
 
 	for (size_t i = 0; i < node_list.size(); i++) {
-		if(node_list[i]->type == SceneNodeTypes::PBRNODE) {
-			PBRNode* node_pbr = (PBRNode*)node_list[i];
-			node_pbr->render(camera, (Light*)light);
-		}
-		else if(node_list[i]->type != SceneNodeTypes::LIGHT){
+		if(node_list[i]->type != SceneNodeTypes::LIGHT){
 			node_list[i]->render(camera);
 			
 			if (render_wireframe)

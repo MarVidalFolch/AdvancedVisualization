@@ -81,6 +81,11 @@ void PBRNode::render(Camera* camera, Light* light) {
 	SceneNode::render(camera);
 }
 
+VolumeNode::VolumeNode(const char* name) {
+	type = SceneNodeTypes::VOLUME;
+	this->name = name;
+}
+
 Light::Light(Vector3 position, Vector4 color, Vector3 intensity, const char* name) {
 	this->name = name;
 	type = SceneNodeTypes::LIGHT;
