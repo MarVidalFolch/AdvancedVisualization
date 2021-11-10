@@ -113,11 +113,13 @@ public:
 
 class VolumeMaterial : public StandardMaterial {
 public:
-	float ray_step;
+	float step_length;
+	float brightness;
 	Texture* volume_texture;
 
-	VolumeMaterial(Texture* volume_texture, float ray_step);
+	VolumeMaterial(Texture* volume_texture, float step_length);
 	void setUniforms(Camera* camera, Matrix44 model);
+	void renderInMenu();
 
 };
 

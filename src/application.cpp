@@ -65,8 +65,8 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		cube->Mesh::createCube();
 
 		// Create volume material
-		float step_vector = 0.4;
-		VolumeMaterial* volume_mat = new VolumeMaterial(volume_texture, step_vector);
+		float step_length = 0.4;
+		VolumeMaterial* volume_mat = new VolumeMaterial(volume_texture, step_length);
 
 		// Create Node material
 		SceneNode* volume_node = new SceneNode("Volume");
