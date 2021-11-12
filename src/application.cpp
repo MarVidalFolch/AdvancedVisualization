@@ -51,7 +51,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 
 		// Read the volume
 		Volume* volume = new Volume();
-		volume->loadPNG("data/volumes/teapot_16_16.png", 16, 16);
+		volume->loadPNG("data/volumes/foot_16_16.png", 16, 16);
 		float volume_width = volume->width;
 		float volume_height = volume->height;
 		float volume_depth = volume->depth;
@@ -65,7 +65,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		cube->Mesh::createCube();
 
 		// Create volume material
-		float step_length = 0.4;
+		float step_length = 0.014;
 		VolumeMaterial* volume_mat = new VolumeMaterial(volume_texture, step_length);
 
 		// Create Node material

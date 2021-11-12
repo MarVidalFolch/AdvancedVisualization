@@ -291,7 +291,7 @@ void PBRMaterial::render(Mesh* mesh, Matrix44 model, Camera* camera) {
 VolumeMaterial::VolumeMaterial(Texture* volume_texture, float step_length) {
 	this->volume_texture = volume_texture;
 	this->step_length = step_length;
-	this->brightness = 1.0;
+	this->brightness = 5.0;
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/volume.fs");
 }
 
@@ -306,14 +306,25 @@ void VolumeMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	shader->setUniform("u_inv_model", inv_model);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glEnable(GL_CULL_FACE);
-	//glCullFace(GL_BACK);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 }
+/*
+void VolumeMaterial::computeStepLength(Matrix44 model) 
+
+	float ratio = 2.0 / 0.014; // ratio found
+	float s_width = (model * Vector4(1.0, 0.0, 0.0, 0.0)).x;
+	float s_height = (model * Vector4(0.0, 1.0, 0.0, 0.0)).y;
+	float s_depth = (model * Vector4(0.0, 0.0, 1.0, 0.0)).z;
+	step_length = Vector3(2.0 * s_width / ratio, 2.0 * s_height / ratio, 2.0 * s_depth / ratio);
+}
+*/
+
 
 void VolumeMaterial::renderInMenu() {
 	StandardMaterial::renderInMenu();
-	ImGui::SliderFloat("Step length", &this->step_length, 0.0f, 50.0f);
+	ImGui::SliderFloat("Step length", &this->step_length, 0.0f, 0.30f);
 	ImGui::SliderFloat("Brightness", &this->brightness, 0.0f, 50.0f);
 
 }

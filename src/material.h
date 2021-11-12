@@ -119,6 +119,7 @@ public:
 
 	VolumeMaterial(Texture* volume_texture, float step_length);
 	void setUniforms(Camera* camera, Matrix44 model);
+	void computeStepLength(Matrix44 model);
 	void renderInMenu();
 
 };

@@ -12,7 +12,7 @@ varying vec3 v_world_position;
 varying vec3 v_normal;
 varying vec2 v_uv;
 
-const int MAX_ITERATIONS = 32;
+const int MAX_ITERATIONS = 256;
 
 vec3 worldCoordsToTextureCoords(vec3 world_coords){
 	// Convert pixel_position from world to local
@@ -23,7 +23,7 @@ vec3 worldCoordsToTextureCoords(vec3 world_coords){
 	vec3 pixel_position_local_cart = pixel_position_local.xyz / pixel_position_local.w;
 	
 	// Convert pixel_position from local to texture coords
-	return normalize((pixel_position_local_cart + 1.0) / 2.0);
+	return (pixel_position_local_cart + 1.0) / 2.0;
 }
 
 
@@ -55,13 +55,13 @@ void main()
 		sample_position = worldCoordsToTextureCoords(pixel_position);
 		
 		// 6. Early termination
-		bvec3 bottom_condition = greaterThan(sample_position, vec3(0.0));
-		bvec3 top_condition = lessThan(sample_position, vec3(1.0));
+		bvec3 bottom_condition = lessThan(sample_position, vec3(0.0));
+		bvec3 top_condition = greaterThanEqual(sample_position, vec3(1.0));
 		
-		//if(all(top_condition) && all(bottom_condition))
-		//{
-		//	break;
-		//}
+		if(all(top_condition) && all(bottom_condition))
+		{
+			break;
+		}
 		
 		if ( final_color.a >= 1.0){
 			break;
