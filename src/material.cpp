@@ -291,7 +291,7 @@ void PBRMaterial::render(Mesh* mesh, Matrix44 model, Camera* camera) {
 VolumeMaterial::VolumeMaterial(Texture* volume_texture, float step_length) {
 	this->volume_texture = volume_texture;
 	this->step_length = step_length;
-	this->brightness = 5.0;
+	this->brightness = 0.9;
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/volume.fs");
 }
 

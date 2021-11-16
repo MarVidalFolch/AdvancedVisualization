@@ -65,7 +65,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		cube->Mesh::createCube();
 
 		// Create volume material
-		float step_length = 0.014;
+		float step_length = 0.038;
 		VolumeMaterial* volume_mat = new VolumeMaterial(volume_texture, step_length);
 
 		// Create Node material
@@ -112,6 +112,8 @@ void Application::render(void)
 		
 		
 	}
+	glDisable(GL_DEPTH_TEST);
+
 
 	//Draw the floor grid
 	if(render_debug)
