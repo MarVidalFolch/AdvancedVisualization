@@ -55,11 +55,27 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		float volume_width = volume->width;
 		float volume_height = volume->height;
 		float volume_depth = volume->depth;
+		float volume_width_step = volume->widthSpacing;
+		float volume_height_step = volume->heightSpacing;
+		float volume_depth_step = volume->depthSpacing;
 
 		// Convert it to a 3D texture
 		Texture* volume_texture = new Texture();
 		volume_texture->create3DFromVolume(volume, GL_CLAMP_TO_EDGE);
 		
+		std::vector<char*> volume_filenames = { "data/volumes/foot_16_16.png", "data/volumes/teapot_16_16.png", "data/volumes/bonsai_16_16.png" };
+
+		std::vector<Texture*> textures_volumes;
+
+		for (int i = 0; i < std::size(volume_filenames); i++) {
+			Volume* volume = new Volume();
+			volume->loadPNG(volume_filenames[i], 16, 16);
+			Texture* volume_texture = new Texture();
+			volume_texture->create3DFromVolume(volume, GL_CLAMP_TO_EDGE);
+			textures_volumes.push_back(volume_texture);
+		}	
+
+
 		// Aux mesh
 		Mesh* cube = new Mesh();
 		cube->Mesh::createCube();
@@ -67,12 +83,15 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		// Create volume material
 		float step_length = 0.038;
 		VolumeMaterial* volume_mat = new VolumeMaterial(volume_texture, step_length);
+		volume_mat->textures_volumes = textures_volumes;
+		volume_mat->textures_volume_index = 0;
 
 		// Create Node material
 		SceneNode* volume_node = new SceneNode("Volume");
 		volume_node->material = volume_mat;
 		volume_node->mesh = cube;
-		//volume_node->model.scale(volume_width/2.0, volume_height / 2.0, volume_depth / 2.0);
+		
+		//volume_node->model.scale(1/(volume_width_step*volume_width), 1/(volume_height_step * volume_height), 1/(volume_depth_step * volume_depth));
 
 
 

@@ -326,5 +326,18 @@ void VolumeMaterial::renderInMenu() {
 	StandardMaterial::renderInMenu();
 	ImGui::SliderFloat("Step length", &this->step_length, 0.0f, 0.30f);
 	ImGui::SliderFloat("Brightness", &this->brightness, 0.0f, 50.0f);
+	bool changed = false;
+	changed |= ImGui::Combo("Sphere texture", (int*)&this->textures_volume_index, "FOOT\0TEA POT\0BONSAI\0");
+	if (changed) {
+		volumeTextureUpdate();
+	}
 
+}
+
+
+void VolumeMaterial::volumeTextureUpdate() {
+	if (textures_volume_index >= std::size(textures_volumes)) {
+		return;
+	}
+	volume_texture = textures_volumes[textures_volume_index];
 }

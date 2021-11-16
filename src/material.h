@@ -116,11 +116,14 @@ public:
 	float step_length;
 	float brightness;
 	Texture* volume_texture;
+	std::vector<Texture*> textures_volumes;
+	int textures_volume_index;
 
 	VolumeMaterial(Texture* volume_texture, float step_length);
 	void setUniforms(Camera* camera, Matrix44 model);
 	void computeStepLength(Matrix44 model);
 	void renderInMenu();
+	void volumeTextureUpdate();
 
 };
 
