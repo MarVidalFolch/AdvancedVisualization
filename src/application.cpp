@@ -47,22 +47,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	camera->setPerspective(45.f,window_width/(float)window_height,0.1f,10000.f); //set the projection, we want to be perspective
 
 	{
-	
-
-		// Read the volume
-		Volume* volume = new Volume();
-		volume->loadPNG("data/volumes/foot_16_16.png", 16, 16);
-		float volume_width = volume->width;
-		float volume_height = volume->height;
-		float volume_depth = volume->depth;
-		float volume_width_step = volume->widthSpacing;
-		float volume_height_step = volume->heightSpacing;
-		float volume_depth_step = volume->depthSpacing;
-
-		// Convert it to a 3D texture
-		Texture* volume_texture = new Texture();
-		volume_texture->create3DFromVolume(volume, GL_CLAMP_TO_EDGE);
-		
+			
 		std::vector<char*> volume_filenames = { "data/volumes/foot_16_16.png", "data/volumes/teapot_16_16.png", "data/volumes/bonsai_16_16.png" };
 
 		std::vector<Texture*> textures_volumes;
@@ -82,7 +67,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 
 		// Create volume material
 		float step_length = 0.038;
-		VolumeMaterial* volume_mat = new VolumeMaterial(volume_texture, step_length);
+		VolumeMaterial* volume_mat = new VolumeMaterial(textures_volumes[0], step_length);
 		volume_mat->textures_volumes = textures_volumes;
 		volume_mat->textures_volume_index = 0;
 

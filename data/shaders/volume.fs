@@ -73,7 +73,7 @@ void main()
 		bvec3 bottom_condition = lessThan(sample_position, vec3(0.0));
 		bvec3 top_condition = greaterThanEqual(sample_position, vec3(1.0));
 		
-		if(all(top_condition) && all(bottom_condition))
+		if(any(top_condition) || any(bottom_condition))
 		{
 			break;
 		}
