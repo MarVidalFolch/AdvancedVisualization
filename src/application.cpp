@@ -46,8 +46,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	camera->lookAt(Vector3(5.f, 5.f, 5.f), Vector3(0.f, 0.0f, 0.f), Vector3(0.f, 1.f, 0.f));
 	camera->setPerspective(45.f,window_width/(float)window_height,0.1f,10000.f); //set the projection, we want to be perspective
 
-	{
-			
+	{		
 		std::vector<char*> volume_filenames = { "data/volumes/foot_16_16.png", "data/volumes/teapot_16_16.png", "data/volumes/bonsai_16_16.png" };
 
 		std::vector<Texture*> textures_volumes;
@@ -58,6 +57,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 			Texture* volume_texture = new Texture();
 			volume_texture->create3DFromVolume(volume, GL_CLAMP_TO_EDGE);
 			textures_volumes.push_back(volume_texture);
+			break;
 		}	
 
 
@@ -65,9 +65,13 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		Mesh* cube = new Mesh();
 		cube->Mesh::createCube();
 
+		// Texture Sphere
+		char* filename_texture = "data/blueNoise.png";
+		Texture* noise_texture = Texture::Get(filename_texture);
+
 		// Create volume material
 		float step_length = 0.038;
-		VolumeMaterial* volume_mat = new VolumeMaterial(textures_volumes[0], step_length);
+		VolumeMaterial* volume_mat = new VolumeMaterial(textures_volumes[0], step_length, noise_texture);
 		volume_mat->textures_volumes = textures_volumes;
 		volume_mat->textures_volume_index = 0;
 

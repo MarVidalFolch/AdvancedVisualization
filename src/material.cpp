@@ -288,10 +288,11 @@ void PBRMaterial::render(Mesh* mesh, Matrix44 model, Camera* camera) {
 	glDisable(GL_CULL_FACE);
 }
 
-VolumeMaterial::VolumeMaterial(Texture* volume_texture, float step_length) {
+VolumeMaterial::VolumeMaterial(Texture* volume_texture, float step_length, Texture* noise_texture) {
 	this->volume_texture = volume_texture;
 	this->step_length = step_length;
 	this->brightness = 0.9;
+	this->noise_texture = noise_texture;
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/volume.fs");
 }
 
@@ -301,6 +302,8 @@ void VolumeMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	shader->setUniform("u_volume_texture", volume_texture, (int)TextureSlots::VOLUME);
 	shader->setUniform("u_step_length", this->step_length);
 	shader->setUniform("u_brightness", this->brightness);
+	shader->setUniform("u_noise_texture", this->noise_texture, (int)TextureSlots::NOISE);
+	shader->setUniform("u_noise_texture_width", this->noise_texture->width);
 	Matrix44 inv_model = model;
 	inv_model.inverse();
 	shader->setUniform("u_inv_model", inv_model);
