@@ -41,7 +41,7 @@ vec3 localCoordsToTextureCoords(vec3 local_coords){
 
 vec3 addOffset(vec3 position, vec3 direction){
 	vec2 uv = gl_FragCoord.xy / u_noise_texture_width;
-	float offset = texture2D(u_noise_texture, uv).x;
+	float offset = u_step_length*(texture2D(u_noise_texture, uv).x);
 	return position + direction * offset;
 }
 
