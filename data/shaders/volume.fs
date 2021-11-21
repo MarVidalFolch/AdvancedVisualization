@@ -39,10 +39,10 @@ vec3 localCoordsToTextureCoords(vec3 local_coords){
 }
 
 
-vec3 addOffset(vec3 coords){
+vec3 addOffset(vec3 position, vec3 direction){
 	vec2 uv = gl_FragCoord.xy / u_noise_texture_width;
-	vec3 offset = texture2D(u_noise_texture, uv).xyz;
-	return normalize(coords + offset);
+	float offset = texture2D(u_noise_texture, uv).x;
+	return position + direction * offset;
 }
 
 void main()
@@ -54,10 +54,12 @@ void main()
 	vec3 ray_direction = normalize(v_world_position - u_camera_position);
 	// Ray direction in local coords
 	ray_direction = worldCoordsToLocalCoordsVectors(vec4(ray_direction, 0.0));
-	ray_direction = addOffset(ray_direction);
 	
 	// step length in local coords
 	vec3 ray_offset = u_step_length*ray_direction;
+	
+	// Offset to prevent jittering
+	pixel_position = addOffset(pixel_position, ray_direction);
 	
 	vec3 sample_position = localCoordsToTextureCoords(pixel_position);
 	
@@ -89,7 +91,7 @@ void main()
 			break;
 		}
 		
-		if ( final_color.a >= 1.0){
+		if ( final_color.a == 1.0){
 			break;
 		}
 	}
