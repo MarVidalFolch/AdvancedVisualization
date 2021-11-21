@@ -31,7 +31,8 @@ enum class TextureSlots {
 	BRDF_LUT = 10,
 	AO = 11,
 	OPPACITY = 12,
-	VOLUME = 13
+	VOLUME = 13,
+	NOISE = 14
 };
 
 //Simple class to handle images (stores RGBA always)

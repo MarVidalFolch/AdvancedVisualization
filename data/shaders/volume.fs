@@ -12,6 +12,9 @@ varying vec3 v_world_position;
 varying vec3 v_normal;
 varying vec2 v_uv;
 
+uniform sampler2D u_noise_texture;
+uniform float u_noise_texture_width;
+
 const int MAX_ITERATIONS = 256;
 
 vec3 worldCoordsToLocalCoords(vec4 world_coords){
@@ -36,6 +39,12 @@ vec3 localCoordsToTextureCoords(vec3 local_coords){
 }
 
 
+vec3 addOffset(vec3 position, vec3 direction){
+	vec2 uv = gl_FragCoord.xy / u_noise_texture_width;
+	float offset = u_step_length*(texture2D(u_noise_texture, uv).x);
+	return position + direction * offset;
+}
+
 void main()
 {
 	// 1. Ray setup
@@ -49,7 +58,11 @@ void main()
 	// step length in local coords
 	vec3 ray_offset = u_step_length*ray_direction;
 	
+	// Offset to prevent jittering
+	pixel_position = addOffset(pixel_position, ray_direction);
+	
 	vec3 sample_position = localCoordsToTextureCoords(pixel_position);
+	
 	
 	// Final color
 	vec4 final_color = vec4(0.0);
@@ -78,7 +91,7 @@ void main()
 			break;
 		}
 		
-		if ( final_color.a >= 1.0){
+		if ( final_color.a == 1.0){
 			break;
 		}
 	}
