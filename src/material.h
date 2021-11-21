@@ -110,6 +110,11 @@ public:
 	void renderInMenu();
 };
 
+enum class classificationOption {
+	PART1,
+	TF
+};
+
 
 class VolumeMaterial : public StandardMaterial {
 public:
@@ -119,16 +124,16 @@ public:
 	Texture* noise_texture;
 	std::vector<Texture*> textures_volumes;
 	int textures_volume_index;
+	classificationOption classification_option;
+	Texture* tf_texture;  // transfer function texture
 
-	VolumeMaterial(Texture* volume_texture, float step_length, Texture* noise_texture);
+	VolumeMaterial(Texture* volume_texture, float step_length, Texture* noise_texture, Texture* tf_texture);
 	void setUniforms(Camera* camera, Matrix44 model);
 	void computeStepLength(Matrix44 model);
 	void renderInMenu();
 	void volumeTextureUpdate();
 
 };
-
-
 
 
 #endif

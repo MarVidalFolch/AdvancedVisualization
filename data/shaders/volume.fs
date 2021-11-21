@@ -15,6 +15,9 @@ varying vec2 v_uv;
 uniform sampler2D u_noise_texture;
 uniform float u_noise_texture_width;
 
+uniform sampler2D u_tf_texture;
+uniform float u_classification_option;
+
 const int MAX_ITERATIONS = 256;
 
 vec3 worldCoordsToLocalCoords(vec4 world_coords){
@@ -72,8 +75,16 @@ void main()
 		// 2. Volume sampling
 		float d = texture3D(u_volume_texture, sample_position).x;
 
+		vec4 sample_color = vec4(0.0);
 		// 3. Classification
-		vec4 sample_color = vec4(d,d,d,d);
+		if (u_classification_option == 0){  // part 1 of the lab
+			sample_color = vec4(d,d,d,d);
+		}
+		else if (u_classification_option == 1){  // transfer function
+			d = clamp(d, 0.05, 0.95);
+			sample_color = texture2D(u_tf_texture, vec2(d, 0.5));
+		}
+		
 
 		// 4. Composition
 		final_color += localCoordsToTextureCoords(vec3(u_step_length)).x * (1.0 - final_color.a)*sample_color;
@@ -91,7 +102,7 @@ void main()
 			break;
 		}
 		
-		if ( final_color.a == 1.0){
+		if (final_color.a == 1.0){
 			break;
 		}
 	}

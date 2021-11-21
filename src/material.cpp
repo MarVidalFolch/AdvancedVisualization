@@ -288,11 +288,14 @@ void PBRMaterial::render(Mesh* mesh, Matrix44 model, Camera* camera) {
 	glDisable(GL_CULL_FACE);
 }
 
-VolumeMaterial::VolumeMaterial(Texture* volume_texture, float step_length, Texture* noise_texture) {
+VolumeMaterial::VolumeMaterial(Texture* volume_texture, float step_length, Texture* noise_texture, Texture* tf_texture) {
 	this->volume_texture = volume_texture;
 	this->step_length = step_length;
 	this->brightness = 0.9;
 	this->noise_texture = noise_texture;
+	this->tf_texture = tf_texture;
+	this->textures_volume_index = 0;
+	this->classification_option = classificationOption::TF;
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/volume.fs");
 }
 
@@ -304,6 +307,10 @@ void VolumeMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	shader->setUniform("u_brightness", this->brightness);
 	shader->setUniform("u_noise_texture", this->noise_texture, (int)TextureSlots::NOISE);
 	shader->setUniform("u_noise_texture_width", this->noise_texture->width);
+	if (classification_option == classificationOption::TF) {
+		shader->setUniform("u_tf_texture", this->tf_texture, (int)TextureSlots::TF);
+	}
+	shader->setUniform("u_classification_option", (float)this->classification_option);
 	Matrix44 inv_model = model;
 	inv_model.inverse();
 	shader->setUniform("u_inv_model", inv_model);
@@ -334,7 +341,7 @@ void VolumeMaterial::renderInMenu() {
 	if (changed) {
 		volumeTextureUpdate();
 	}
-
+	ImGui::Combo("Classification Option", (int*)&this->classification_option, "PART1\0TF\0");
 }
 
 

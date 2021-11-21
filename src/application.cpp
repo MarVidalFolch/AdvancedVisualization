@@ -69,9 +69,13 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		char* filename_texture = "data/blueNoise.png";
 		Texture* noise_texture = Texture::Get(filename_texture);
 
+		// Texture Transfer Function
+		char* filename_tf_texture = "data/foot_tf2.png";
+		Texture* foot_tf_texture = Texture::Get(filename_tf_texture);
+
 		// Create volume material
 		float step_length = 0.038;
-		VolumeMaterial* volume_mat = new VolumeMaterial(textures_volumes[0], step_length, noise_texture);
+		VolumeMaterial* volume_mat = new VolumeMaterial(textures_volumes[0], step_length, noise_texture, foot_tf_texture);
 		volume_mat->textures_volumes = textures_volumes;
 		volume_mat->textures_volume_index = 0;
 
