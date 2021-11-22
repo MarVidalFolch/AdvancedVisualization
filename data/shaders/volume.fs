@@ -20,6 +20,8 @@ uniform float u_classification_option;
 
 uniform vec4 u_plane_parameters;
 
+uniform float u_isovalue;
+
 const int MAX_ITERATIONS = 256;
 
 vec3 worldCoordsToLocalCoords(vec4 world_coords){
@@ -95,15 +97,15 @@ void main()
 			break;
 		}
 		
+		// 2. Volume sampling
+		float d = texture3D(u_volume_texture, sample_position).x;
+		
 		// Volume clipping
-		if(isBeforePlane(pixel_position)){
+		if(isBeforePlane(pixel_position) || d < u_isovalue){
 			pixel_position += ray_offset;
 			sample_position = localCoordsToTextureCoords(pixel_position);
 			continue;
 		}
-		
-		// 2. Volume sampling
-		float d = texture3D(u_volume_texture, sample_position).x;
 
 		vec4 sample_color = vec4(0.0);
 		// 3. Classification
@@ -123,6 +125,7 @@ void main()
 		pixel_position += ray_offset;
 		sample_position = localCoordsToTextureCoords(pixel_position);
 	}
+	
 
 	//7. Final color
 	gl_FragColor = final_color*u_brightness;

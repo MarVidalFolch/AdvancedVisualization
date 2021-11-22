@@ -297,6 +297,7 @@ VolumeMaterial::VolumeMaterial(Texture* volume_texture, float step_length, Textu
 	this->textures_volume_index = 0;
 	this->classification_option = classificationOption::TF;
 	this->plane_parameters = Vector4(-1.0, 0.0, 0.0, 0.0);
+	this->isovalue = 0.3;
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/volume.fs");
 
 }
@@ -314,6 +315,7 @@ void VolumeMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	}
 	shader->setUniform("u_classification_option", (float)this->classification_option);
 	shader->setUniform("u_plane_parameters", this->plane_parameters);
+	shader->setUniform("u_isovalue", this->isovalue);
 	Matrix44 inv_model = model;
 	inv_model.inverse();
 	shader->setUniform("u_inv_model", inv_model);
@@ -323,17 +325,6 @@ void VolumeMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	glCullFace(GL_BACK);
 
 }
-/*
-void VolumeMaterial::computeStepLength(Matrix44 model) 
-
-	float ratio = 2.0 / 0.014; // ratio found
-	float s_width = (model * Vector4(1.0, 0.0, 0.0, 0.0)).x;
-	float s_height = (model * Vector4(0.0, 1.0, 0.0, 0.0)).y;
-	float s_depth = (model * Vector4(0.0, 0.0, 1.0, 0.0)).z;
-	step_length = Vector3(2.0 * s_width / ratio, 2.0 * s_height / ratio, 2.0 * s_depth / ratio);
-}
-*/
-
 
 void VolumeMaterial::renderInMenu() {
 	StandardMaterial::renderInMenu();
@@ -346,6 +337,7 @@ void VolumeMaterial::renderInMenu() {
 	}
 	ImGui::Combo("Classification Option", (int*)&this->classification_option, "PART1\0TF\0");
 	ImGui::SliderFloat4("Plane parameters", (float*)&this->plane_parameters, -1.0, 1.0);
+	ImGui::SliderFloat("Isovalue", (float*)&this->isovalue, 0.0f, 1.0f);
 }
 
 

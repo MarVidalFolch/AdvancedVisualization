@@ -57,7 +57,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 			Texture* volume_texture = new Texture();
 			volume_texture->create3DFromVolume(volume, GL_CLAMP_TO_EDGE);
 			textures_volumes.push_back(volume_texture);
-			//break;
+			break;
 		}	
 
 
