@@ -126,6 +126,7 @@ public:
 	int textures_volume_index;
 	classificationOption classification_option;
 	Texture* tf_texture;  // transfer function texture
+	Vector4 plane_parameters; 
 
 	VolumeMaterial(Texture* volume_texture, float step_length, Texture* noise_texture, Texture* tf_texture);
 	void setUniforms(Camera* camera, Matrix44 model);

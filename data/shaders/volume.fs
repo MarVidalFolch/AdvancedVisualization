@@ -18,6 +18,8 @@ uniform float u_noise_texture_width;
 uniform sampler2D u_tf_texture;
 uniform float u_classification_option;
 
+uniform vec4 u_plane_parameters;
+
 const int MAX_ITERATIONS = 256;
 
 vec3 worldCoordsToLocalCoords(vec4 world_coords){
@@ -48,6 +50,14 @@ vec3 addOffset(vec3 position, vec3 direction){
 	return position + direction * offset;
 }
 
+bool isBeforePlane(vec3 position){
+	float result = dot(u_plane_parameters, vec4(position, 1.0));
+	if(result > 0){
+		return true;
+	}
+	return false;
+}
+
 void main()
 {
 	// 1. Ray setup
@@ -72,6 +82,12 @@ void main()
 	
 	// Ray loop
 	for(int i=0; i<MAX_ITERATIONS; i++){
+		// Volume clipping
+		if(isBeforePlane(pixel_position)){
+			pixel_position += ray_offset;
+			sample_position = localCoordsToTextureCoords(pixel_position);
+			continue;
+		}
 		// 2. Volume sampling
 		float d = texture3D(u_volume_texture, sample_position).x;
 

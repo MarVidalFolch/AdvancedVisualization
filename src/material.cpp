@@ -296,7 +296,9 @@ VolumeMaterial::VolumeMaterial(Texture* volume_texture, float step_length, Textu
 	this->tf_texture = tf_texture;
 	this->textures_volume_index = 0;
 	this->classification_option = classificationOption::TF;
+	this->plane_parameters = Vector4(-1.0, 0.0, 0.0, 0.0);
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/volume.fs");
+
 }
 
 void VolumeMaterial::setUniforms(Camera* camera, Matrix44 model) {
@@ -311,6 +313,7 @@ void VolumeMaterial::setUniforms(Camera* camera, Matrix44 model) {
 		shader->setUniform("u_tf_texture", this->tf_texture, (int)TextureSlots::TF);
 	}
 	shader->setUniform("u_classification_option", (float)this->classification_option);
+	shader->setUniform("u_plane_parameters", this->plane_parameters);
 	Matrix44 inv_model = model;
 	inv_model.inverse();
 	shader->setUniform("u_inv_model", inv_model);
@@ -334,14 +337,15 @@ void VolumeMaterial::computeStepLength(Matrix44 model)
 
 void VolumeMaterial::renderInMenu() {
 	StandardMaterial::renderInMenu();
-	ImGui::SliderFloat("Step length", &this->step_length, 0.0f, 0.30f);
-	ImGui::SliderFloat("Brightness", &this->brightness, 0.0f, 50.0f);
+	ImGui::SliderFloat("Step length", &this->step_length, 0.01f, 0.30f);
+	ImGui::SliderFloat("Brightness", &this->brightness, 0.0f, 5.0f);
 	bool changed = false;
 	changed |= ImGui::Combo("Sphere texture", (int*)&this->textures_volume_index, "FOOT\0TEA POT\0BONSAI\0");
 	if (changed) {
 		volumeTextureUpdate();
 	}
 	ImGui::Combo("Classification Option", (int*)&this->classification_option, "PART1\0TF\0");
+	ImGui::SliderFloat4("Plane parameters", (float*)&this->plane_parameters, -1.0, 1.0);
 }
 
 
