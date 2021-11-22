@@ -82,12 +82,26 @@ void main()
 	
 	// Ray loop
 	for(int i=0; i<MAX_ITERATIONS; i++){
+		// 6. Early termination
+		bvec3 bottom_condition = lessThan(sample_position, vec3(0.0));
+		bvec3 top_condition = greaterThan(sample_position, vec3(1.0));
+		
+		if(any(top_condition) || any(bottom_condition))
+		{
+			break;
+		}
+		
+		if (final_color.a == 1.0){
+			break;
+		}
+		
 		// Volume clipping
 		if(isBeforePlane(pixel_position)){
 			pixel_position += ray_offset;
 			sample_position = localCoordsToTextureCoords(pixel_position);
 			continue;
 		}
+		
 		// 2. Volume sampling
 		float d = texture3D(u_volume_texture, sample_position).x;
 
@@ -97,7 +111,7 @@ void main()
 			sample_color = vec4(d,d,d,d);
 		}
 		else if (u_classification_option == 1){  // transfer function
-			d = clamp(d, 0.05, 0.95);
+			d = clamp(d, 0.01, 0.99);
 			sample_color = texture2D(u_tf_texture, vec2(d, 0.5));
 		}
 		
@@ -108,19 +122,6 @@ void main()
 		// 5. Next sample
 		pixel_position += ray_offset;
 		sample_position = localCoordsToTextureCoords(pixel_position);
-		
-		// 6. Early termination
-		bvec3 bottom_condition = lessThan(sample_position, vec3(0.0));
-		bvec3 top_condition = greaterThanEqual(sample_position, vec3(1.0));
-		
-		if(any(top_condition) || any(bottom_condition))
-		{
-			break;
-		}
-		
-		if (final_color.a == 1.0){
-			break;
-		}
 	}
 
 	//7. Final color
