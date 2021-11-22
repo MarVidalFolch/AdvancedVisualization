@@ -24,6 +24,162 @@ uniform float u_isovalue;
 
 const int MAX_ITERATIONS = 256;
 
+
+/*  // PBR APPLICATION
+
+#define PI 3.14159265359
+#define RECIPROCAL_PI 0.3183098861837697
+#define epsilon 0.0000001
+
+uniform vec4 u_light_color;
+uniform vec3 u_light_intensity;
+uniform vec3 u_light_pos;
+uniform vec3 u_ambient_light;
+
+uniform vec3 u_camera_position;
+
+varying vec3 v_position;
+varying vec3 v_world_position;
+varying vec3 v_normal;
+varying vec2 v_uv;
+
+uniform float u_roughness_factor;
+uniform float u_metalness_factor;
+uniform vec4 u_color;
+
+struct Vectors{
+	vec3 V;
+	vec3 N;
+	vec3 R;
+	vec3 H;
+	vec3 L;
+}vectors;
+
+struct PBRMat
+{
+	float roughness;
+	float metalness;
+	vec4 base_color;
+	vec3 f_lambert;
+	vec3 F0;	
+}pbr_mat;
+
+struct dotProducts
+{
+	float NdotL;
+	float NdotV;
+	float NdotH;
+	float VdotH;
+}dp;
+
+void computeDotProducts(vec3 N, vec3 L, vec3 V, vec3 H){
+	dp.NdotL = max(dot(N,L), epsilon);
+	dp.NdotV = max(dot(N,V), epsilon);
+	dp.NdotH = max(dot(N,H), epsilon);
+	dp.VdotH = max(dot(V, H), epsilon);
+}
+
+
+void computeVectors(){
+	// Light vector
+	vectors.L = normalize(u_light_pos - v_world_position);
+	
+	// Eye vector or camera vector
+	vectors.V = normalize(u_camera_position - v_world_position);
+	
+	// Normal vector
+	vectors.N = (1.0, 1.0, 1.0); // GET THE NORMAL FROM LAST PART OF THE LAB
+	
+	// Reflected ray 
+	vectors.R = reflect(-vectors.V, vectors.N);
+	vectors.R = normalize(vectors.R);
+	
+	// Half vector
+	vectors.H = normalize(vectors.V + vectors.L);
+	
+	// Compute dot products of the vectors
+	computeDotProducts(vectors.N, vectors.L, vectors.V, vectors.H);
+}
+
+// degamma
+vec3 gamma_to_linear(vec3 color)
+{
+	return pow(color, vec3(GAMMA));
+}
+
+// gamma
+vec3 linear_to_gamma(vec3 color)
+{
+	return pow(color, vec3(INV_GAMMA));
+}
+
+
+void getMaterialProperties(){
+	pbr_mat.roughness = u_roughness_factor;
+	pbr_mat.metalness = u_metalness_factor;
+	
+	pbr_mat.base_color = u_color;
+	
+	pbr_mat.base_color.xyz = gamma_to_linear(pbr_mat.base_color.xyz);
+	
+	pbr_mat.f_lambert = mix(pbr_mat.base_color.rgb, vec3(0.0), pbr_mat.metalness) * RECIPROCAL_PI;
+	pbr_mat.F0 = mix(vec3(0.04), pbr_mat.base_color.rgb, pbr_mat.metalness);
+}
+
+vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+float EpicNotesGeometricFunction(){
+	float k = pow(pbr_mat.roughness + 1.0, 2.0)/8.0;
+	float NdotL = dp.NdotL;
+	float NdotV = dp.NdotV;
+	
+	// G_1(L)
+	float g1_L = NdotL /(NdotL*(1.0-k)+k);
+		
+	// G_1(V)
+	float g1_V = NdotV /(NdotV*(1.0-k)+k);
+	
+	return g1_L * g1_V;
+}
+
+float BeckmanTowebrigdeDistributionFunction(){
+	float alpha_sq = pow(pbr_mat.roughness,4.0);
+	float NdotH_sq = pow(dp.NdotH,2.0);
+	float denominator = pow(NdotH_sq*(alpha_sq-1.0)+1.0,2.0);
+	return alpha_sq*RECIPROCAL_PI/denominator;
+
+}
+
+
+vec3 directLightCompute(){
+	float NdotL = dp.NdotL;
+	float NdotV = dp.NdotV;
+	
+	// PBR Specular
+	vec3 F = FresnelSchlickRoughness(NdotL, pbr_mat.F0, pbr_mat.roughness);
+	float G = EpicNotesGeometricFunction();
+	float D = BeckmanTowebrigdeDistributionFunction();
+	
+	vec3 specular_amount = F*G*D / (4.0*NdotL*NdotV);
+	
+	vec3 pbr_term = pbr_mat.f_lambert + specular_amount;
+	
+	return pbr_term; // multiply it by a scaling term??????
+	
+}
+
+
+
+
+
+
+
+
+// END PBR APPPICATION */
+
 vec3 worldCoordsToLocalCoords(vec4 world_coords){
 	// Convert pixel_position from world to local
 	vec4 pixel_position_local = u_inv_model*world_coords;
@@ -85,7 +241,7 @@ void main()
 	// Ray loop
 	for(int i=0; i<MAX_ITERATIONS; i++){
 		// 6. Early termination
-		bvec3 bottom_condition = lessThan(sample_position, vec3(0.0));
+		bvec3 bottom_condition = lessThan(sample_position, vec3(-1.0));
 		bvec3 top_condition = greaterThan(sample_position, vec3(1.0));
 		
 		if(any(top_condition) || any(bottom_condition))
