@@ -81,7 +81,6 @@ void computeVectors(vec3 pixel_position, vec3 normal){
 	vec3 sample_pos_world = (u_model * vec4( pixel_position, 0.0) ).xyz;
 	
 	// Light vector in local coordinates
-	vec3 light_pos = vec3(10.0, 20.0, 10.0);
 	vectors.L = normalize(u_light_pos - sample_pos_world);
 	
 	// Eye vector or camera vector
