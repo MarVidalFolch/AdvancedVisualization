@@ -127,7 +127,18 @@ public:
 	classificationOption classification_option;
 	Texture* tf_texture;  // transfer function texture
 	Vector4 plane_parameters; 
+	bool apply_plane;
 	float isovalue;
+	float h; // step value to compute the gradient
+
+	// Light parameters
+	Vector3 light_position;
+	float light_intentsity;
+	Vector4 light_color;
+
+	// Material props
+	float roughness;
+	float metalness;
 
 	VolumeMaterial(Texture* volume_texture, float step_length, Texture* noise_texture, Texture* tf_texture);
 	void setUniforms(Camera* camera, Matrix44 model);

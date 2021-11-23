@@ -297,7 +297,19 @@ VolumeMaterial::VolumeMaterial(Texture* volume_texture, float step_length, Textu
 	this->textures_volume_index = 0;
 	this->classification_option = classificationOption::TF;
 	this->plane_parameters = Vector4(-1.0, 0.0, 0.0, 0.0);
+	this->apply_plane = false;
 	this->isovalue = 0.3;
+	this->h = 0.1;
+
+	// Light params
+	this->light_position = Vector3(10.0, 10.0, 0.0);
+	this->light_intentsity = 2.0;
+	this->light_color = Vector4(0.8, 0.0, 0.5, 1.0);
+
+	// Material params
+	this->roughness = 0.5;
+	this->metalness = 0.5;
+
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/volume.fs");
 
 }
@@ -315,7 +327,9 @@ void VolumeMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	}
 	shader->setUniform("u_classification_option", (float)this->classification_option);
 	shader->setUniform("u_plane_parameters", this->plane_parameters);
+	shader->setUniform("u_apply_plane", this->apply_plane);
 	shader->setUniform("u_isovalue", this->isovalue);
+	shader->setUniform("u_h", this->h);
 	Matrix44 inv_model = model;
 	inv_model.inverse();
 	shader->setUniform("u_inv_model", inv_model);
@@ -323,6 +337,15 @@ void VolumeMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
+
+	// Light params
+	shader->setUniform("u_light_pos", this->light_position);
+	shader->setUniform("u_light_intensity", this->light_intentsity);
+	shader->setUniform("u_light_color", this->light_color);
+
+	// Material props
+	shader->setUniform("u_roughness_factor", this->roughness);
+	shader->setUniform("u_metalness_factor", this->metalness);
 
 }
 
@@ -335,9 +358,23 @@ void VolumeMaterial::renderInMenu() {
 	if (changed) {
 		volumeTextureUpdate();
 	}
-	ImGui::Combo("Classification Option", (int*)&this->classification_option, "PART1\0TF\0");
-	ImGui::SliderFloat4("Plane parameters", (float*)&this->plane_parameters, -1.0, 1.0);
+	ImGui::Combo("Classification Option", (int*)&this->classification_option, "PART1\0TF\0ISO LIGHT\0");
+
+	ImGui::Checkbox("Plane", &this->apply_plane);
+	if(this->apply_plane)
+		ImGui::SliderFloat4("Plane parameters", (float*)&this->plane_parameters, -1.0, 1.0);
+
 	ImGui::SliderFloat("Isovalue", (float*)&this->isovalue, 0.0f, 1.0f);
+	ImGui::SliderFloat("h step", &this->h, 0.0, 0.7);
+
+	// Light params
+	ImGui::SliderFloat3("Light pos", (float*)&this->light_position, -15.0, 15.0);
+	ImGui::SliderFloat("Light Inten", (float*)&this->light_intentsity, 0.0, 10.0);
+	ImGui::ColorEdit3("Light Color", (float*)&this->light_color);
+
+	// Material params
+	ImGui::SliderFloat("Roughness", &this->roughness, 0.0, 1.0);
+	ImGui::SliderFloat("Metalness", &this->metalness, 0.0, 1.0);
 }
 
 

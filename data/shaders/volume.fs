@@ -19,33 +19,30 @@ uniform sampler2D u_tf_texture;
 uniform float u_classification_option;
 
 uniform vec4 u_plane_parameters;
+uniform bool u_apply_plane;
 
 uniform float u_isovalue;
+uniform bool u_apply_isosurface;
 
-const int MAX_ITERATIONS = 256;
+uniform float u_h;
+
+const int MAX_ITERATIONS = 100000;
 
 
-/*  // PBR APPLICATION
+// PBR APPLICATION
 
 #define PI 3.14159265359
 #define RECIPROCAL_PI 0.3183098861837697
 #define epsilon 0.0000001
 
 uniform vec4 u_light_color;
-uniform vec3 u_light_intensity;
+uniform float u_light_intensity;
 uniform vec3 u_light_pos;
-uniform vec3 u_ambient_light;
-
-uniform vec3 u_camera_position;
-
-varying vec3 v_position;
-varying vec3 v_world_position;
-varying vec3 v_normal;
-varying vec2 v_uv;
 
 uniform float u_roughness_factor;
 uniform float u_metalness_factor;
-uniform vec4 u_color;
+
+uniform mat4 u_model;
 
 struct Vectors{
 	vec3 V;
@@ -80,15 +77,18 @@ void computeDotProducts(vec3 N, vec3 L, vec3 V, vec3 H){
 }
 
 
-void computeVectors(){
-	// Light vector
-	vectors.L = normalize(u_light_pos - v_world_position);
+void computeVectors(vec3 pixel_position, vec3 normal){
+	vec3 sample_pos_world = (u_model * vec4( pixel_position, 0.0) ).xyz;
+	
+	// Light vector in local coordinates
+	vec3 light_pos = vec3(10.0, 20.0, 10.0);
+	vectors.L = normalize(u_light_pos - sample_pos_world);
 	
 	// Eye vector or camera vector
-	vectors.V = normalize(u_camera_position - v_world_position);
+	vectors.V = normalize(u_camera_position - sample_pos_world);
 	
 	// Normal vector
-	vectors.N = (1.0, 1.0, 1.0); // GET THE NORMAL FROM LAST PART OF THE LAB
+	vectors.N = (u_model * vec4( normal, 0.0) ).xyz;
 	
 	// Reflected ray 
 	vectors.R = reflect(-vectors.V, vectors.N);
@@ -101,26 +101,14 @@ void computeVectors(){
 	computeDotProducts(vectors.N, vectors.L, vectors.V, vectors.H);
 }
 
-// degamma
-vec3 gamma_to_linear(vec3 color)
-{
-	return pow(color, vec3(GAMMA));
-}
-
-// gamma
-vec3 linear_to_gamma(vec3 color)
-{
-	return pow(color, vec3(INV_GAMMA));
-}
-
 
 void getMaterialProperties(){
 	pbr_mat.roughness = u_roughness_factor;
 	pbr_mat.metalness = u_metalness_factor;
 	
-	pbr_mat.base_color = u_color;
+	pbr_mat.base_color = vec4(1.0);//u_color;
 	
-	pbr_mat.base_color.xyz = gamma_to_linear(pbr_mat.base_color.xyz);
+	pbr_mat.base_color.xyz = pbr_mat.base_color.xyz;
 	
 	pbr_mat.f_lambert = mix(pbr_mat.base_color.rgb, vec3(0.0), pbr_mat.metalness) * RECIPROCAL_PI;
 	pbr_mat.F0 = mix(vec3(0.04), pbr_mat.base_color.rgb, pbr_mat.metalness);
@@ -167,18 +155,11 @@ vec3 directLightCompute(){
 	
 	vec3 pbr_term = pbr_mat.f_lambert + specular_amount;
 	
-	return pbr_term; // multiply it by a scaling term??????
+	return pbr_term * u_light_color * u_light_intensity; 
 	
 }
 
-
-
-
-
-
-
-
-// END PBR APPPICATION */
+// END PBR APPPICATION
 
 vec3 worldCoordsToLocalCoords(vec4 world_coords){
 	// Convert pixel_position from world to local
@@ -210,10 +191,19 @@ vec3 addOffset(vec3 position, vec3 direction){
 
 bool isBeforePlane(vec3 position){
 	float result = dot(u_plane_parameters, vec4(position, 1.0));
-	if(result > 0){
+	if(result > 0.0){
 		return true;
 	}
 	return false;
+}
+
+vec3 computeGradient(vec3 sample_pos){
+
+	float n_x = texture3D(u_volume_texture, localCoordsToTextureCoords(vec3(sample_pos.x + u_h, sample_pos.y, sample_pos.z))).x - texture3D(u_volume_texture, localCoordsToTextureCoords(vec3(sample_pos.x - u_h, sample_pos.y, sample_pos.z))).x;
+	float n_y = texture3D(u_volume_texture, localCoordsToTextureCoords(vec3(sample_pos.x, sample_pos.y + u_h, sample_pos.z))).x - texture3D(u_volume_texture, localCoordsToTextureCoords(vec3(sample_pos.x, sample_pos.y - u_h, sample_pos.z))).x;
+	float n_z = texture3D(u_volume_texture, localCoordsToTextureCoords(vec3(sample_pos.x, sample_pos.y, sample_pos.z + u_h))).x - texture3D(u_volume_texture, localCoordsToTextureCoords(vec3(sample_pos.x, sample_pos.y, sample_pos.z - u_h))).x;
+
+	return normalize(vec3(n_x,n_y,n_z)/(2.0*u_h)); 
 }
 
 void main()
@@ -241,7 +231,7 @@ void main()
 	// Ray loop
 	for(int i=0; i<MAX_ITERATIONS; i++){
 		// 6. Early termination
-		bvec3 bottom_condition = lessThan(sample_position, vec3(-1.0));
+		bvec3 bottom_condition = lessThan(sample_position, vec3(0.0));
 		bvec3 top_condition = greaterThan(sample_position, vec3(1.0));
 		
 		if(any(top_condition) || any(bottom_condition))
@@ -257,7 +247,7 @@ void main()
 		float d = texture3D(u_volume_texture, sample_position).x;
 		
 		// Volume clipping
-		if(isBeforePlane(pixel_position) || d < u_isovalue){
+		if((u_apply_plane && isBeforePlane(pixel_position)) || (d < u_isovalue && u_classification_option == 2.0)){
 			pixel_position += ray_offset;
 			sample_position = localCoordsToTextureCoords(pixel_position);
 			continue;
@@ -265,23 +255,29 @@ void main()
 
 		vec4 sample_color = vec4(0.0);
 		// 3. Classification
-		if (u_classification_option == 0){  // part 1 of the lab
+		if (u_classification_option == 0.0){  // part 1 of the lab
 			sample_color = vec4(d,d,d,d);
 		}
-		else if (u_classification_option == 1){  // transfer function
+		else if (u_classification_option == 1.0){  // transfer function
 			d = clamp(d, 0.01, 0.99);
 			sample_color = texture2D(u_tf_texture, vec2(d, 0.5));
+		}
+		else if (u_classification_option == 2.0) {
+			computeVectors(pixel_position, computeGradient(sample_position));
+			getMaterialProperties();
+			
+			sample_color = vec4(directLightCompute(), 0.1);
 		}
 		
 
 		// 4. Composition
 		final_color += localCoordsToTextureCoords(vec3(u_step_length)).x * (1.0 - final_color.a)*sample_color;
-
+		
+		
 		// 5. Next sample
 		pixel_position += ray_offset;
 		sample_position = localCoordsToTextureCoords(pixel_position);
 	}
-	
 
 	//7. Final color
 	gl_FragColor = final_color*u_brightness;
