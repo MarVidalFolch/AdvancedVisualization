@@ -154,7 +154,7 @@ vec3 directLightCompute(){
 	
 	vec3 pbr_term = pbr_mat.f_lambert + specular_amount;
 	
-	return pbr_term * u_light_color * u_light_intensity; 
+	return pbr_term * u_light_color.xyz * u_light_intensity; 
 	
 }
 
@@ -189,6 +189,10 @@ vec3 addOffset(vec3 position, vec3 direction){
 }
 
 bool isBeforePlane(vec3 position){
+	vec3 plane_normal = normalize(u_plane_parameters.xyz);
+	
+	vec4 plane_params = vec4(plane_normal, u_plane_parameters.w);
+	
 	float result = dot(u_plane_parameters, vec4(position, 1.0));
 	if(result > 0.0){
 		return true;
@@ -238,7 +242,7 @@ void main()
 			break;
 		}
 		
-		if (final_color.a == 1.0){
+		if (final_color.a >= 1.0){
 			break;
 		}
 		
@@ -262,10 +266,11 @@ void main()
 			sample_color = texture2D(u_tf_texture, vec2(d, 0.5));
 		}
 		else if (u_classification_option == 2.0) {
-			computeVectors(pixel_position, computeGradient(sample_position));
+			vec3 N = -computeGradient(pixel_position);
+			computeVectors(pixel_position, N);
 			getMaterialProperties();
 			
-			sample_color = vec4(directLightCompute(), 0.1);
+			sample_color = vec4(directLightCompute(), d);
 		}
 		
 

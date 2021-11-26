@@ -291,15 +291,15 @@ void PBRMaterial::render(Mesh* mesh, Matrix44 model, Camera* camera) {
 VolumeMaterial::VolumeMaterial(Texture* volume_texture, float step_length, Texture* noise_texture, Texture* tf_texture) {
 	this->volume_texture = volume_texture;
 	this->step_length = step_length;
-	this->brightness = 0.9;
+	this->brightness = 0.5;
 	this->noise_texture = noise_texture;
 	this->tf_texture = tf_texture;
 	this->textures_volume_index = 0;
 	this->classification_option = classificationOption::TF;
 	this->plane_parameters = Vector4(-1.0, 0.0, 0.0, 0.0);
 	this->apply_plane = false;
-	this->isovalue = 0.3;
-	this->h = 0.1;
+	this->isovalue = 0.21;
+	this->h = 0.19;
 
 	// Light params
 	this->light_position = Vector3(10.0, 10.0, 0.0);
@@ -308,7 +308,7 @@ VolumeMaterial::VolumeMaterial(Texture* volume_texture, float step_length, Textu
 
 	// Material params
 	this->roughness = 0.5;
-	this->metalness = 0.5;
+	this->metalness = 1.0;
 
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/volume.fs");
 
@@ -351,7 +351,7 @@ void VolumeMaterial::setUniforms(Camera* camera, Matrix44 model) {
 
 void VolumeMaterial::renderInMenu() {
 	StandardMaterial::renderInMenu();
-	ImGui::SliderFloat("Step length", &this->step_length, 0.01f, 0.30f);
+	ImGui::SliderFloat("Step length", &this->step_length, 0.01f, 1.0f);
 	ImGui::SliderFloat("Brightness", &this->brightness, 0.0f, 5.0f);
 	bool changed = false;
 	changed |= ImGui::Combo("Sphere texture", (int*)&this->textures_volume_index, "FOOT\0TEA POT\0BONSAI\0");
@@ -364,8 +364,8 @@ void VolumeMaterial::renderInMenu() {
 	if(this->apply_plane)
 		ImGui::SliderFloat4("Plane parameters", (float*)&this->plane_parameters, -1.0, 1.0);
 
-	ImGui::SliderFloat("Isovalue", (float*)&this->isovalue, 0.0f, 1.0f);
-	ImGui::SliderFloat("h step", &this->h, 0.0, 0.7);
+	ImGui::SliderFloat("Isovalue", (float*)&this->isovalue, 0.01f, 1.0f);
+	ImGui::SliderFloat("h step", &this->h, 0.01, 0.7);
 
 	// Light params
 	ImGui::SliderFloat3("Light pos", (float*)&this->light_position, -15.0, 15.0);
