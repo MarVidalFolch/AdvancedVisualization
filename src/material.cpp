@@ -295,20 +295,30 @@ VolumeMaterial::VolumeMaterial(Texture* volume_texture, float step_length, Textu
 	this->noise_texture = noise_texture;
 	this->tf_texture = tf_texture;
 	this->textures_volume_index = 0;
-	this->classification_option = classificationOption::TF;
+	this->classification_option = ClassificationOption::TF;
 	this->plane_parameters = Vector4(-1.0, 0.0, 0.0, 0.0);
 	this->apply_plane = false;
 	this->isovalue = 0.21;
 	this->h = 0.19;
 
-	// Light params
+	// Light PBR params
 	this->light_position = Vector3(10.0, 10.0, 0.0);
 	this->light_intentsity = 2.0;
 	this->light_color = Vector4(0.8, 0.0, 0.5, 1.0);
 
-	// Material params
+	// Material PBR params
 	this->roughness = 0.5;
 	this->metalness = 1.0;
+
+	// Light Phong Params
+	this->ka = Vector3(0.3, 0.3, 0.3);
+	this->kd = Vector3(0.3, 0.3, 0.3);
+	this->ks = Vector3(0.3, 0.3, 0.3);
+	this->alpha_sh = 2;
+
+	this->ambient_light = Vector3(0.3, 0.3, 0.3);
+	this->light_diffuse = Vector3(0.3, 0.3, 0.3);
+	this->light_specular = Vector3(0.7, 0.7, 0.7);
 
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/volume.fs");
 
@@ -322,7 +332,7 @@ void VolumeMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	shader->setUniform("u_brightness", this->brightness);
 	shader->setUniform("u_noise_texture", this->noise_texture, (int)TextureSlots::NOISE);
 	shader->setUniform("u_noise_texture_width", this->noise_texture->width);
-	if (classification_option == classificationOption::TF) {
+	if (classification_option == ClassificationOption::TF) {
 		shader->setUniform("u_tf_texture", this->tf_texture, (int)TextureSlots::TF);
 	}
 	shader->setUniform("u_classification_option", (float)this->classification_option);
@@ -338,43 +348,82 @@ void VolumeMaterial::setUniforms(Camera* camera, Matrix44 model) {
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
-	// Light params
+	// Light PBR params
 	shader->setUniform("u_light_pos", this->light_position);
 	shader->setUniform("u_light_intensity", this->light_intentsity);
 	shader->setUniform("u_light_color", this->light_color);
 
-	// Material props
+	// Material PBR props
 	shader->setUniform("u_roughness_factor", this->roughness);
 	shader->setUniform("u_metalness_factor", this->metalness);
+
+	// Light Phong params
+	shader->setUniform("u_ka", ka);
+	shader->setUniform("u_kd", kd);
+	shader->setUniform("u_ks", ks);
+	shader->setUniform("u_alpha_sh", alpha_sh);
+	shader->setUniform("u_ambient_light", ambient_light);
+	shader->setUniform("u_light_diffuse", light_diffuse);
+	shader->setUniform("u_light_specular", light_specular);
 
 }
 
 void VolumeMaterial::renderInMenu() {
-	StandardMaterial::renderInMenu();
-	ImGui::SliderFloat("Step length", &this->step_length, 0.01f, 1.0f);
-	ImGui::SliderFloat("Brightness", &this->brightness, 0.0f, 5.0f);
+	ImGui::Combo("Classification Option", (int*)&this->classification_option, "PART1\0TF\0ISO PBR\0ISO PHONG\0");
+
 	bool changed = false;
 	changed |= ImGui::Combo("Sphere texture", (int*)&this->textures_volume_index, "FOOT\0TEA POT\0BONSAI\0");
 	if (changed) {
 		volumeTextureUpdate();
 	}
-	ImGui::Combo("Classification Option", (int*)&this->classification_option, "PART1\0TF\0ISO LIGHT\0");
+
+	ImGui::SliderFloat("Step length", &this->step_length, 0.01f, 1.0f);
+	ImGui::SliderFloat("Brightness", &this->brightness, 0.0f, 5.0f);
 
 	ImGui::Checkbox("Plane", &this->apply_plane);
-	if(this->apply_plane)
+	if (this->apply_plane)
 		ImGui::SliderFloat4("Plane parameters", (float*)&this->plane_parameters, -1.0, 1.0);
 
-	ImGui::SliderFloat("Isovalue", (float*)&this->isovalue, 0.01f, 1.0f);
-	ImGui::SliderFloat("h step", &this->h, 0.01, 0.7);
+	if (this->classification_option == ClassificationOption::ISOPBR || this->classification_option == ClassificationOption::ISOPHONG) {
+		if (ImGui::TreeNode("Isosurface")) {
+		ImGui::SliderFloat("Isovalue", (float*)&this->isovalue, 0.01f, 1.0f);
+		ImGui::SliderFloat("h step", &this->h, 0.01, 0.7);
+		ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("Light params")) {
+			// Light params
+			ImGui::SliderFloat3("Light pos", (float*)&this->light_position, -15.0, 15.0);
+			ImGui::SliderFloat("Light Inten", (float*)&this->light_intentsity, 0.0, 10.0);
+			ImGui::ColorEdit3("Light Color", (float*)&this->light_color);
+			ImGui::TreePop();
 
-	// Light params
-	ImGui::SliderFloat3("Light pos", (float*)&this->light_position, -15.0, 15.0);
-	ImGui::SliderFloat("Light Inten", (float*)&this->light_intentsity, 0.0, 10.0);
-	ImGui::ColorEdit3("Light Color", (float*)&this->light_color);
+		}
 
-	// Material params
-	ImGui::SliderFloat("Roughness", &this->roughness, 0.0, 1.0);
-	ImGui::SliderFloat("Metalness", &this->metalness, 0.0, 1.0);
+		if (this->classification_option == ClassificationOption::ISOPBR) {
+			if (ImGui::TreeNode("PBR params")) {
+				// Material params
+				ImGui::SliderFloat("Roughness", &this->roughness, 0.0, 1.0);
+				ImGui::SliderFloat("Metalness", &this->metalness, 0.0, 1.0);
+				ImGui::TreePop();
+
+			}
+		}
+		else {
+			if (ImGui::TreeNode("Phong params")) {
+				ImGui::DragFloat3("Ambient reflection (ka)", (float*)&this->ka, 0.005f, 0.0f, 1.0f);
+				ImGui::DragFloat3("Diffuse reflection (kd)", (float*)&this->kd, 0.005f, 0.0f, 1.0f);
+				ImGui::DragFloat3("Specular reflection (ks)", (float*)&this->ks, 0.005f, 0.0f, 1.0f);
+				ImGui::SliderFloat("Alpha", &this->alpha_sh, 0.0, 10);
+				ImGui::ColorEdit3("Ambient light", (float*)&ambient_light);
+				ImGui::ColorEdit3("Diffuse light", (float*)&light_diffuse);
+				ImGui::ColorEdit3("Specular light", (float*)&light_specular);
+				ImGui::TreePop();
+
+			}
+		}
+	}
+
+	
 }
 
 

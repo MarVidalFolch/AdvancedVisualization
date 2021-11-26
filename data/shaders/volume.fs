@@ -88,6 +88,7 @@ void computeVectors(vec3 pixel_position, vec3 normal){
 	
 	// Normal vector
 	vectors.N = (u_model * vec4( normal, 0.0) ).xyz;
+	vectors.N = normalize(vectors.N);
 	
 	// Reflected ray 
 	vectors.R = reflect(-vectors.V, vectors.N);
@@ -159,6 +160,51 @@ vec3 directLightCompute(){
 }
 
 // END PBR APPPICATION
+uniform vec3 u_ka;
+uniform vec3 u_kd;
+uniform vec3 u_ks;
+uniform float u_alpha_sh;
+
+uniform vec3 u_ambient_light;
+uniform vec3 u_light_diffuse;
+uniform vec3 u_light_specular;
+
+// PHONG
+vec3 phongIllumination(){	
+	// Normal vector
+	vec3 N = vectors.N;
+	
+	// Negative light vector
+	vec3 L = vectors.L;
+		
+	// N dot L
+	float NdotL = clamp(dot(N, L), 0.0, 1.0);
+	
+	// Reflected ray 
+	vec3 R = vectors.R;
+	
+	// Eye vector or camera vector
+	vec3 V = vectors.V;
+	
+	// R dot V
+	float RdotV = clamp(dot(R, V), 0.0, 1.0);
+	
+	// Ambient light term
+	vec3 ka_ia = u_ka * u_ambient_light;
+	
+	// Diffuse ligth term
+	vec3 kd_NdotL_id = u_kd * NdotL * u_light_diffuse;
+	
+	// Specular light term
+	vec3 ks_RdotV_is = u_ks * pow(RdotV, u_alpha_sh) * u_light_specular;
+	
+	vec3 light = ka_ia + kd_NdotL_id + ks_RdotV_is;
+	
+	return light * u_light_color.xyz * u_light_intensity;
+}
+
+
+// END PHONG
 
 vec3 worldCoordsToLocalCoords(vec4 world_coords){
 	// Convert pixel_position from world to local
@@ -249,8 +295,8 @@ void main()
 		// 2. Volume sampling
 		float d = texture3D(u_volume_texture, sample_position).x;
 		
-		// Volume clipping
-		if((u_apply_plane && isBeforePlane(pixel_position)) || (d < u_isovalue && u_classification_option == 2.0)){
+		// Volume clipping and isosurface
+		if((u_apply_plane && isBeforePlane(pixel_position)) || (d < u_isovalue && u_classification_option >= 2.0)){
 			pixel_position += ray_offset;
 			sample_position = localCoordsToTextureCoords(pixel_position);
 			continue;
@@ -271,6 +317,12 @@ void main()
 			getMaterialProperties();
 			
 			sample_color = vec4(directLightCompute(), d);
+		}
+		else if (u_classification_option == 3.0){
+			vec3 N = -computeGradient(pixel_position);
+			computeVectors(pixel_position, N);
+			
+			sample_color = vec4(phongIllumination(), d);
 		}
 		
 

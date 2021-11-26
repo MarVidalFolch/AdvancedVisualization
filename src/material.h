@@ -110,9 +110,11 @@ public:
 	void renderInMenu();
 };
 
-enum class classificationOption {
-	PART1,
-	TF
+enum class ClassificationOption {
+	PART1 = 0,
+	TF = 1,
+	ISOPBR = 2,
+	ISOPHONG = 3
 };
 
 
@@ -124,14 +126,14 @@ public:
 	Texture* noise_texture;
 	std::vector<Texture*> textures_volumes;
 	int textures_volume_index;
-	classificationOption classification_option;
+	ClassificationOption classification_option;
 	Texture* tf_texture;  // transfer function texture
 	Vector4 plane_parameters; 
 	bool apply_plane;
 	float isovalue;
 	float h; // step value to compute the gradient
 
-	// Light parameters
+	// Light PBR parameters
 	Vector3 light_position;
 	float light_intentsity;
 	Vector4 light_color;
@@ -139,6 +141,17 @@ public:
 	// Material props
 	float roughness;
 	float metalness;
+
+
+	// Light Phong parameters
+	Vector3 ka;
+	Vector3 kd;
+	Vector3 ks;
+	float alpha_sh;
+
+	Vector3 ambient_light;
+	Vector3 light_diffuse;
+	Vector3 light_specular;
 
 	VolumeMaterial(Texture* volume_texture, float step_length, Texture* noise_texture, Texture* tf_texture);
 	void setUniforms(Camera* camera, Matrix44 model);
