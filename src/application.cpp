@@ -63,7 +63,6 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 			// transfer functions
 			Texture* tf_texture = Texture::Get(tf_filenames[i]);
 			tf_textures.push_back(tf_texture);
-			//break;
 		}	
 
 
@@ -88,9 +87,6 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 
 
 		node_list.push_back(volume_node);
-		//node_list.push_back(ball_node);
-		//node_list.push_back(lantern_node);
-		//node_list.push_back(light);
 	}
 	
 	//hide the cursor
