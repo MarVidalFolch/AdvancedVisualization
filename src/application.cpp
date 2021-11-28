@@ -57,7 +57,6 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 			Texture* volume_texture = new Texture();
 			volume_texture->create3DFromVolume(volume, GL_CLAMP_TO_EDGE);
 			textures_volumes.push_back(volume_texture);
-			break;
 		}	
 
 
@@ -74,10 +73,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		Texture* foot_tf_texture = Texture::Get(filename_tf_texture);
 
 		// Create volume material
-		float step_length = 0.01;
-		VolumeMaterial* volume_mat = new VolumeMaterial(textures_volumes[0], step_length, noise_texture, foot_tf_texture);
-		volume_mat->textures_volumes = textures_volumes;
-		volume_mat->textures_volume_index = 0;
+		VolumeMaterial* volume_mat = new VolumeMaterial(textures_volumes, noise_texture, foot_tf_texture);
 
 		// Create Node material
 		SceneNode* volume_node = new SceneNode("Volume");

@@ -288,17 +288,27 @@ void PBRMaterial::render(Mesh* mesh, Matrix44 model, Camera* camera) {
 	glDisable(GL_CULL_FACE);
 }
 
-VolumeMaterial::VolumeMaterial(Texture* volume_texture, float step_length, Texture* noise_texture, Texture* tf_texture) {
-	this->volume_texture = volume_texture;
-	this->step_length = step_length;
-	this->brightness = 0.5;
+VolumeMaterial::VolumeMaterial(std::vector<Texture*> volume_textures, Texture* noise_texture, Texture* tf_texture) {
+	// Volume
+	this->volume_texture = volume_textures[0];
+	this->textures_volume_index = VolumeOption::FOOT;
+	this->volume_textures = volume_textures;
+	// Ray params
+	this->step_length = 0.048;
+	this->brightness = 0.6;
+	// Jittering
 	this->noise_texture = noise_texture;
+	// transfer function
 	this->tf_texture = tf_texture;
-	this->textures_volume_index = 0;
-	this->classification_option = ClassificationOption::TF;
+
+	this->classification_option = ClassificationOption::PART1;
+	
+	// Volume clipping plane
 	this->plane_parameters = Vector4(-1.0, 0.0, 0.0, 0.0);
 	this->apply_plane = false;
+	// Isosurface 
 	this->isovalue = 0.21;
+	// Gradient step estimator
 	this->h = 0.19;
 
 	// Light PBR params
@@ -368,14 +378,60 @@ void VolumeMaterial::setUniforms(Camera* camera, Matrix44 model) {
 
 }
 
-void VolumeMaterial::renderInMenu() {
-	ImGui::Combo("Classification Option", (int*)&this->classification_option, "PART1\0TF\0ISO PBR\0ISO PHONG\0");
+void VolumeMaterial::loadPresets(bool changed) {
+	if (!changed)
+		return;
 
-	bool changed = false;
-	changed |= ImGui::Combo("Sphere texture", (int*)&this->textures_volume_index, "FOOT\0TEA POT\0BONSAI\0");
-	if (changed) {
-		volumeTextureUpdate();
+	switch (this->classification_option)
+	{
+	case ClassificationOption::PART1:
+		part1FootPreset();
+		break;
+	case ClassificationOption::TF:
+		tfFootPreset();
+		break;
+	case ClassificationOption::ISOPBR:
+		isoPBRFootPreset();
+		break;
+	case ClassificationOption::ISOPHONG:
+		isoPhongFootPreset();
+		break;
 	}
+}
+
+void VolumeMaterial::loadPresetsPerVolume(bool changed) {
+	if (!changed) {
+		return;
+	}
+	switch (this->classification_option)
+	{
+	case ClassificationOption::PART1:
+		part1PresetSelector();
+		break;
+	case ClassificationOption::TF:
+		tfPresetSelector();
+		break;
+	case ClassificationOption::ISOPBR:
+		isoPBRPresetSelector();
+		break;
+	case ClassificationOption::ISOPHONG:
+		isoPhongPresetSelector();
+		break;
+	}
+
+
+}
+
+
+void VolumeMaterial::renderInMenu() {
+	bool classi_changed = false;
+	classi_changed |= ImGui::Combo("Classification Option", (int*)&this->classification_option, "PART1\0TF\0ISO PBR\0ISO PHONG\0");
+	// Load presets
+	loadPresets(classi_changed);
+
+	bool volume_changed = false;
+	volume_changed |= ImGui::Combo("Sphere texture", (int*)&this->textures_volume_index, "FOOT\0TEA POT\0BONSAI\0");
+	loadPresetsPerVolume(volume_changed);
 
 	ImGui::SliderFloat("Step length", &this->step_length, 0.01f, 1.0f);
 	ImGui::SliderFloat("Brightness", &this->brightness, 0.0f, 5.0f);
@@ -387,7 +443,7 @@ void VolumeMaterial::renderInMenu() {
 	if (this->classification_option == ClassificationOption::ISOPBR || this->classification_option == ClassificationOption::ISOPHONG) {
 		if (ImGui::TreeNode("Isosurface")) {
 		ImGui::SliderFloat("Isovalue", (float*)&this->isovalue, 0.01f, 1.0f);
-		ImGui::SliderFloat("h step", &this->h, 0.01, 0.7);
+		ImGui::SliderFloat("h step", &this->h, 0.001, 0.2);
 		ImGui::TreePop();
 		}
 		if (ImGui::TreeNode("Light params")) {
@@ -402,8 +458,8 @@ void VolumeMaterial::renderInMenu() {
 		if (this->classification_option == ClassificationOption::ISOPBR) {
 			if (ImGui::TreeNode("PBR params")) {
 				// Material params
-				ImGui::SliderFloat("Roughness", &this->roughness, 0.0, 1.0);
-				ImGui::SliderFloat("Metalness", &this->metalness, 0.0, 1.0);
+				ImGui::SliderFloat("Roughness", &this->roughness, 0.01, 1.0);
+				ImGui::SliderFloat("Metalness", &this->metalness, 0.01, 1.0);
 				ImGui::TreePop();
 
 			}
@@ -413,7 +469,7 @@ void VolumeMaterial::renderInMenu() {
 				ImGui::DragFloat3("Ambient reflection (ka)", (float*)&this->ka, 0.005f, 0.0f, 1.0f);
 				ImGui::DragFloat3("Diffuse reflection (kd)", (float*)&this->kd, 0.005f, 0.0f, 1.0f);
 				ImGui::DragFloat3("Specular reflection (ks)", (float*)&this->ks, 0.005f, 0.0f, 1.0f);
-				ImGui::SliderFloat("Alpha", &this->alpha_sh, 0.0, 10);
+				ImGui::SliderFloat("Alpha", &this->alpha_sh, 0.01, 10);
 				ImGui::ColorEdit3("Ambient light", (float*)&ambient_light);
 				ImGui::ColorEdit3("Diffuse light", (float*)&light_diffuse);
 				ImGui::ColorEdit3("Specular light", (float*)&light_specular);
@@ -428,8 +484,248 @@ void VolumeMaterial::renderInMenu() {
 
 
 void VolumeMaterial::volumeTextureUpdate() {
-	if (textures_volume_index >= std::size(textures_volumes)) {
+	if ((int)textures_volume_index >= std::size(volume_textures)) {
 		return;
 	}
-	volume_texture = textures_volumes[textures_volume_index];
+	volume_texture = volume_textures[(int)textures_volume_index];
+}
+
+// Presets per volume
+// Part 1
+void VolumeMaterial::part1PresetSelector() {
+	switch (this->textures_volume_index)
+	{
+	case VolumeOption::FOOT:
+		part1FootPreset();
+		break;
+	case VolumeOption::TEAPOT:
+		part1TeapotPreset();
+		break;
+	case VolumeOption::BONSAI:
+		part1BonsaiPreset();
+		break;
+	}
+}
+void VolumeMaterial::part1FootPreset() {
+	this->step_length = 0.048;
+	this->brightness = 0.6;
+	this->textures_volume_index = VolumeOption::FOOT;
+	volumeTextureUpdate();
+}
+void VolumeMaterial::part1TeapotPreset() {
+	this->step_length = 0.032;
+	this->brightness = 0.881;
+	this->textures_volume_index = VolumeOption::TEAPOT;
+	volumeTextureUpdate();
+}
+void VolumeMaterial::part1BonsaiPreset(){
+	this->step_length = 0.032;
+	this->brightness = 0.683;
+	this->textures_volume_index = VolumeOption::BONSAI;
+	volumeTextureUpdate();
+}
+// Transfer functions
+void VolumeMaterial::tfPresetSelector() {
+	switch (this->textures_volume_index)
+	{
+	case VolumeOption::FOOT:
+		tfFootPreset();
+		break;
+	case VolumeOption::TEAPOT:
+		tfTeapotPreset();
+		break;
+	case VolumeOption::BONSAI:
+		tfBonsaiPreset();
+		break;
+	}
+}
+void VolumeMaterial::tfFootPreset() {
+	this->step_length = 0.048;
+	this->brightness = 0.6;
+	//Choose transfer function
+	//...
+	this->textures_volume_index = VolumeOption::FOOT;
+	volumeTextureUpdate();
+}
+void VolumeMaterial::tfTeapotPreset() {
+	this->step_length = 0.032;
+	this->brightness = 0.881;
+	//Choose transfer function
+	//...
+	this->textures_volume_index = VolumeOption::TEAPOT;
+	volumeTextureUpdate();
+}
+void VolumeMaterial::tfBonsaiPreset() {
+	this->step_length = 0.032;
+	this->brightness = 0.683;
+	//Choose transfer function
+	//...
+	this->textures_volume_index = VolumeOption::BONSAI;
+	volumeTextureUpdate();
+}
+// Isosurface PBR
+void VolumeMaterial::isoPBRPresetSelector() {
+	switch (this->textures_volume_index)
+	{
+	case VolumeOption::FOOT:
+		isoPBRFootPreset();
+		break;
+	case VolumeOption::TEAPOT:
+		isoPBRTeapotPreset();
+		break;
+	case VolumeOption::BONSAI:
+		isoPBRBonsaiPreset();
+		break;
+	}
+}
+void VolumeMaterial::isoPBRFootPreset() {
+	// Ray params
+	this->step_length = 0.01;
+	this->brightness = 0.917;
+	// Isosurface
+	this->isovalue = 0.311;
+	// GRadient step estimator
+	this->h = 0.05;
+	// Light params
+	this->light_position = Vector3(-10.0, 9.5, 6.29);
+	this->light_intentsity = 2.5;
+	this->light_color = Vector4(0.56, 0.43, 1.0, 1.0);
+	// PBR params
+	this->roughness = 0.206;
+	this->metalness = 0.458;
+
+	// Volume params
+	this->textures_volume_index = VolumeOption::FOOT;
+	volumeTextureUpdate();
+}
+void VolumeMaterial::isoPBRTeapotPreset() {
+	// Ray params
+	this->step_length = 0.01;
+	this->brightness = 0.917;
+	// Isosurface
+	this->isovalue = 0.176;
+	// GRadient step estimator
+	this->h = 0.005;
+	// Light params
+	this->light_position = Vector3(-10.0, 9.5, 6.29);
+	this->light_intentsity = 2.5;
+	this->light_color = Vector4(0.56, 0.43, 1.0, 1.0);
+	// PBR params
+	this->roughness = 0.206;
+	this->metalness = 0.458;
+
+	// Volume params
+	this->textures_volume_index = VolumeOption::TEAPOT;
+	volumeTextureUpdate();
+}
+void VolumeMaterial::isoPBRBonsaiPreset() {
+	// Ray params
+	this->step_length = 0.01;
+	this->brightness = 0.917;
+	// Isosurface
+	this->isovalue = 0.167;
+	// GRadient step estimator
+	this->h = 0.005;
+	// Light params
+	this->light_position = Vector3(-10.0, 9.5, 6.29);
+	this->light_intentsity = 2.5;
+	this->light_color = Vector4(0.56, 0.43, 1.0, 1.0);
+	// PBR params
+	this->roughness = 0.206;
+	this->metalness = 0.458;
+
+	// Volume params
+	this->textures_volume_index = VolumeOption::BONSAI;
+	volumeTextureUpdate();
+}
+
+// Isosurface Phong
+void VolumeMaterial::isoPhongPresetSelector() {
+	switch (this->textures_volume_index)
+	{
+	case VolumeOption::FOOT:
+		isoPhongFootPreset();
+		break;
+	case VolumeOption::TEAPOT:
+		isoPhongTeapotPreset();
+		break;
+	case VolumeOption::BONSAI:
+		isoPhongBonsaiPreset();
+		break;
+	}
+}
+void VolumeMaterial::isoPhongFootPreset() {
+	// Ray params
+	this->step_length = 0.01;
+	this->brightness = 0.917;
+	// Isosurface
+	this->isovalue = 0.307;
+	// GRadient step estimator
+	this->h = 0.013;
+	// Light params
+	this->light_position = Vector3(-10.0, 9.5, 6.29);
+	this->light_intentsity = 2.5;
+	this->light_color = Vector4(0.56, 0.43, 1.0, 1.0);
+
+	// Phong params
+	this->ka = Vector3(0.16, 0.21, 0.035);
+	this->kd = Vector3(0.11, 0.05, 0.02);
+	this->ks = Vector3(0.705, 0.7, 0.7);
+	this->alpha_sh = 1.5;
+	this->ambient_light = Vector3(0.56, 0.43, 1.0);
+	this->light_diffuse = Vector3(0.56, 0.43, 1.0);
+	this->light_specular = Vector3(0.56, 0.43, 1.0);
+	// Volume params
+	this->textures_volume_index = VolumeOption::FOOT;
+	volumeTextureUpdate();
+}
+void VolumeMaterial::isoPhongTeapotPreset() {
+	// Ray params
+	this->step_length = 0.01;
+	this->brightness = 0.917;
+	// Isosurface
+	this->isovalue = 0.158;
+	// GRadient step estimator
+	this->h = 0.006;
+	// Light params
+	this->light_position = Vector3(-10.0, 9.5, 6.29);
+	this->light_intentsity = 2.5;
+	this->light_color = Vector4(0.56, 0.43, 1.0, 1.0);
+
+	// Phong params
+	this->ka = Vector3(0.16, 0.21, 0.035);
+	this->kd = Vector3(0.11, 0.05, 0.02);
+	this->ks = Vector3(0.705, 0.7, 0.7);
+	this->alpha_sh = 1.5;
+	this->ambient_light = Vector3(0.56, 0.43, 1.0);
+	this->light_diffuse = Vector3(0.56, 0.43, 1.0);
+	this->light_specular = Vector3(0.56, 0.43, 1.0);
+	// Volume params
+	this->textures_volume_index = VolumeOption::TEAPOT;
+	volumeTextureUpdate();
+}
+void VolumeMaterial::isoPhongBonsaiPreset() {
+	// Ray params
+	this->step_length = 0.01;
+	this->brightness = 0.917;
+	// Isosurface
+	this->isovalue = 0.154;
+	// GRadient step estimator
+	this->h = 0.005;
+	// Light params
+	this->light_position = Vector3(-10.0, 9.5, 6.29);
+	this->light_intentsity = 2.5;
+	this->light_color = Vector4(0.56, 0.43, 1.0, 1.0);
+
+	// Phong params
+	this->ka = Vector3(0.16, 0.21, 0.035);
+	this->kd = Vector3(0.11, 0.05, 0.02);
+	this->ks = Vector3(0.705, 0.7, 0.7);
+	this->alpha_sh = 1.5;
+	this->ambient_light = Vector3(0.56, 0.43, 1.0);
+	this->light_diffuse = Vector3(0.56, 0.43, 1.0);
+	this->light_specular = Vector3(0.56, 0.43, 1.0);
+	// Volume params
+	this->textures_volume_index = VolumeOption::BONSAI;
+	volumeTextureUpdate();
 }

@@ -178,10 +178,11 @@ vec3 phongIllumination(){
 	vec3 L = vectors.L;
 		
 	// N dot L
-	float NdotL = clamp(dot(N, L), 0.0, 1.0);
+	float NdotL = dp.NdotL;
 	
 	// Reflected ray 
-	vec3 R = vectors.R;
+	vec3 R = reflect(-L, N);
+	R = normalize(R);
 	
 	// Eye vector or camera vector
 	vec3 V = vectors.V;

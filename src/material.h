@@ -117,6 +117,12 @@ enum class ClassificationOption {
 	ISOPHONG = 3
 };
 
+enum class VolumeOption {
+	FOOT = 0,
+	TEAPOT = 1,
+	BONSAI = 2
+};
+
 
 class VolumeMaterial : public StandardMaterial {
 public:
@@ -124,8 +130,8 @@ public:
 	float brightness;
 	Texture* volume_texture;
 	Texture* noise_texture;
-	std::vector<Texture*> textures_volumes;
-	int textures_volume_index;
+	std::vector<Texture*> volume_textures;
+	VolumeOption textures_volume_index;
 	ClassificationOption classification_option;
 	Texture* tf_texture;  // transfer function texture
 	Vector4 plane_parameters; 
@@ -153,11 +159,36 @@ public:
 	Vector3 light_diffuse;
 	Vector3 light_specular;
 
-	VolumeMaterial(Texture* volume_texture, float step_length, Texture* noise_texture, Texture* tf_texture);
+	VolumeMaterial(std::vector<Texture*> volume_textures, Texture* noise_texture, Texture* tf_texture);
 	void setUniforms(Camera* camera, Matrix44 model);
-	void computeStepLength(Matrix44 model);
+	void loadPresets(bool changed);
+	void loadPresetsPerVolume(bool changed);
 	void renderInMenu();
 	void volumeTextureUpdate();
+
+	// Presets per volume
+	// Part 1
+	void part1PresetSelector();
+	void part1FootPreset();
+	void part1TeapotPreset();
+	void part1BonsaiPreset();
+	// Transfer functions
+	void tfPresetSelector();
+	void tfFootPreset();
+	void tfTeapotPreset();
+	void tfBonsaiPreset();
+
+	// Isosurface PBR
+	void isoPBRPresetSelector();
+	void isoPBRFootPreset();
+	void isoPBRTeapotPreset();
+	void isoPBRBonsaiPreset();
+
+	// Isosurface Phong
+	void isoPhongPresetSelector();
+	void isoPhongFootPreset();
+	void isoPhongTeapotPreset();
+	void isoPhongBonsaiPreset();
 
 };
 
