@@ -591,8 +591,8 @@ void VolumeMaterial::isoPBRFootPreset() {
 	this->light_intentsity = 2.5;
 	this->light_color = Vector4(0.56, 0.43, 1.0, 1.0);
 	// PBR params
-	this->roughness = 0.206;
-	this->metalness = 0.458;
+	this->roughness = 0.612;
+	this->metalness = 0.868;
 
 	// Volume params
 	this->textures_volume_index = VolumeOption::FOOT;
@@ -603,7 +603,7 @@ void VolumeMaterial::isoPBRTeapotPreset() {
 	this->step_length = 0.01;
 	this->brightness = 0.917;
 	// Isosurface
-	this->isovalue = 0.176;
+	this->isovalue = 0.185;
 	// GRadient step estimator
 	this->h = 0.005;
 	// Light params
@@ -611,8 +611,8 @@ void VolumeMaterial::isoPBRTeapotPreset() {
 	this->light_intentsity = 2.5;
 	this->light_color = Vector4(0.56, 0.43, 1.0, 1.0);
 	// PBR params
-	this->roughness = 0.206;
-	this->metalness = 0.458;
+	this->roughness = 0.503;
+	this->metalness = 0.938;
 
 	// Volume params
 	this->textures_volume_index = VolumeOption::TEAPOT;
@@ -623,7 +623,7 @@ void VolumeMaterial::isoPBRBonsaiPreset() {
 	this->step_length = 0.01;
 	this->brightness = 0.917;
 	// Isosurface
-	this->isovalue = 0.167;
+	this->isovalue = 0.224;
 	// GRadient step estimator
 	this->h = 0.005;
 	// Light params
@@ -631,8 +631,8 @@ void VolumeMaterial::isoPBRBonsaiPreset() {
 	this->light_intentsity = 2.5;
 	this->light_color = Vector4(0.56, 0.43, 1.0, 1.0);
 	// PBR params
-	this->roughness = 0.206;
-	this->metalness = 0.458;
+	this->roughness = 0.546;
+	this->metalness = 0.748;
 
 	// Volume params
 	this->textures_volume_index = VolumeOption::BONSAI;
