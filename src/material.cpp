@@ -288,10 +288,10 @@ void PBRMaterial::render(Mesh* mesh, Matrix44 model, Camera* camera) {
 	glDisable(GL_CULL_FACE);
 }
 
-VolumeMaterial::VolumeMaterial(std::vector<Texture*> volume_textures, Texture* noise_texture, Texture* tf_texture) {
+VolumeMaterial::VolumeMaterial(std::vector<Texture*> volume_textures, Texture* noise_texture, std::vector<Texture*> tf_textures) {
 	// Volume
-	this->volume_texture = volume_textures[0];
 	this->textures_volume_index = VolumeOption::FOOT;
+	this->volume_texture = volume_textures[(int)this->textures_volume_index];
 	this->volume_textures = volume_textures;
 	// Ray params
 	this->step_length = 0.048;
@@ -299,7 +299,8 @@ VolumeMaterial::VolumeMaterial(std::vector<Texture*> volume_textures, Texture* n
 	// Jittering
 	this->noise_texture = noise_texture;
 	// transfer function
-	this->tf_texture = tf_texture;
+	this->tf_texture = tf_textures[(int)this->textures_volume_index];
+	this->tf_textures = tf_textures;
 
 	this->classification_option = ClassificationOption::PART1;
 	
@@ -483,11 +484,12 @@ void VolumeMaterial::renderInMenu() {
 }
 
 
-void VolumeMaterial::volumeTextureUpdate() {
+void VolumeMaterial::volumeUpdate() {
 	if ((int)textures_volume_index >= std::size(volume_textures)) {
 		return;
 	}
 	volume_texture = volume_textures[(int)textures_volume_index];
+	tf_texture = tf_textures[(int)textures_volume_index];
 }
 
 // Presets per volume
@@ -510,19 +512,19 @@ void VolumeMaterial::part1FootPreset() {
 	this->step_length = 0.048;
 	this->brightness = 0.6;
 	this->textures_volume_index = VolumeOption::FOOT;
-	volumeTextureUpdate();
+	volumeUpdate();
 }
 void VolumeMaterial::part1TeapotPreset() {
 	this->step_length = 0.032;
 	this->brightness = 0.881;
 	this->textures_volume_index = VolumeOption::TEAPOT;
-	volumeTextureUpdate();
+	volumeUpdate();
 }
 void VolumeMaterial::part1BonsaiPreset(){
 	this->step_length = 0.032;
 	this->brightness = 0.683;
 	this->textures_volume_index = VolumeOption::BONSAI;
-	volumeTextureUpdate();
+	volumeUpdate();
 }
 // Transfer functions
 void VolumeMaterial::tfPresetSelector() {
@@ -545,7 +547,7 @@ void VolumeMaterial::tfFootPreset() {
 	//Choose transfer function
 	//...
 	this->textures_volume_index = VolumeOption::FOOT;
-	volumeTextureUpdate();
+	volumeUpdate();
 }
 void VolumeMaterial::tfTeapotPreset() {
 	this->step_length = 0.032;
@@ -553,7 +555,7 @@ void VolumeMaterial::tfTeapotPreset() {
 	//Choose transfer function
 	//...
 	this->textures_volume_index = VolumeOption::TEAPOT;
-	volumeTextureUpdate();
+	volumeUpdate();
 }
 void VolumeMaterial::tfBonsaiPreset() {
 	this->step_length = 0.032;
@@ -561,7 +563,7 @@ void VolumeMaterial::tfBonsaiPreset() {
 	//Choose transfer function
 	//...
 	this->textures_volume_index = VolumeOption::BONSAI;
-	volumeTextureUpdate();
+	volumeUpdate();
 }
 // Isosurface PBR
 void VolumeMaterial::isoPBRPresetSelector() {
@@ -596,7 +598,7 @@ void VolumeMaterial::isoPBRFootPreset() {
 
 	// Volume params
 	this->textures_volume_index = VolumeOption::FOOT;
-	volumeTextureUpdate();
+	volumeUpdate();
 }
 void VolumeMaterial::isoPBRTeapotPreset() {
 	// Ray params
@@ -616,7 +618,7 @@ void VolumeMaterial::isoPBRTeapotPreset() {
 
 	// Volume params
 	this->textures_volume_index = VolumeOption::TEAPOT;
-	volumeTextureUpdate();
+	volumeUpdate();
 }
 void VolumeMaterial::isoPBRBonsaiPreset() {
 	// Ray params
@@ -636,7 +638,7 @@ void VolumeMaterial::isoPBRBonsaiPreset() {
 
 	// Volume params
 	this->textures_volume_index = VolumeOption::BONSAI;
-	volumeTextureUpdate();
+	volumeUpdate();
 }
 
 // Isosurface Phong
@@ -677,7 +679,7 @@ void VolumeMaterial::isoPhongFootPreset() {
 	this->light_specular = Vector3(0.56, 0.43, 1.0);
 	// Volume params
 	this->textures_volume_index = VolumeOption::FOOT;
-	volumeTextureUpdate();
+	volumeUpdate();
 }
 void VolumeMaterial::isoPhongTeapotPreset() {
 	// Ray params
@@ -702,7 +704,7 @@ void VolumeMaterial::isoPhongTeapotPreset() {
 	this->light_specular = Vector3(0.56, 0.43, 1.0);
 	// Volume params
 	this->textures_volume_index = VolumeOption::TEAPOT;
-	volumeTextureUpdate();
+	volumeUpdate();
 }
 void VolumeMaterial::isoPhongBonsaiPreset() {
 	// Ray params
@@ -727,5 +729,5 @@ void VolumeMaterial::isoPhongBonsaiPreset() {
 	this->light_specular = Vector3(0.56, 0.43, 1.0);
 	// Volume params
 	this->textures_volume_index = VolumeOption::BONSAI;
-	volumeTextureUpdate();
+	volumeUpdate();
 }

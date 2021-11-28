@@ -134,6 +134,7 @@ public:
 	VolumeOption textures_volume_index;
 	ClassificationOption classification_option;
 	Texture* tf_texture;  // transfer function texture
+	std::vector<Texture*> tf_textures;
 	Vector4 plane_parameters; 
 	bool apply_plane;
 	float isovalue;
@@ -159,12 +160,12 @@ public:
 	Vector3 light_diffuse;
 	Vector3 light_specular;
 
-	VolumeMaterial(std::vector<Texture*> volume_textures, Texture* noise_texture, Texture* tf_texture);
+	VolumeMaterial(std::vector<Texture*> volume_textures, Texture* noise_texture, std::vector<Texture*> tf_texture);
 	void setUniforms(Camera* camera, Matrix44 model);
 	void loadPresets(bool changed);
 	void loadPresetsPerVolume(bool changed);
 	void renderInMenu();
-	void volumeTextureUpdate();
+	void volumeUpdate();
 
 	// Presets per volume
 	// Part 1

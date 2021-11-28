@@ -48,15 +48,22 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 
 	{		
 		std::vector<char*> volume_filenames = { "data/volumes/foot_16_16.png", "data/volumes/teapot_16_16.png", "data/volumes/bonsai_16_16.png" };
+		std::vector<char*> tf_filenames = { "data/foot_tf2.png", "data/foot_tf.png", "data/blueNoise.png"};
 
 		std::vector<Texture*> textures_volumes;
+		std::vector<Texture*> tf_textures;
 
 		for (int i = 0; i < std::size(volume_filenames); i++) {
+			// read volume
 			Volume* volume = new Volume();
 			volume->loadPNG(volume_filenames[i], 16, 16);
 			Texture* volume_texture = new Texture();
 			volume_texture->create3DFromVolume(volume, GL_CLAMP_TO_EDGE);
 			textures_volumes.push_back(volume_texture);
+			// transfer functions
+			Texture* tf_texture = Texture::Get(tf_filenames[i]);
+			tf_textures.push_back(tf_texture);
+			//break;
 		}	
 
 
@@ -68,12 +75,8 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 		char* filename_texture = "data/blueNoise.png";
 		Texture* noise_texture = Texture::Get(filename_texture);
 
-		// Texture Transfer Function
-		char* filename_tf_texture = "data/foot_tf2.png";
-		Texture* foot_tf_texture = Texture::Get(filename_tf_texture);
-
 		// Create volume material
-		VolumeMaterial* volume_mat = new VolumeMaterial(textures_volumes, noise_texture, foot_tf_texture);
+		VolumeMaterial* volume_mat = new VolumeMaterial(textures_volumes, noise_texture, tf_textures);
 
 		// Create Node material
 		SceneNode* volume_node = new SceneNode("Volume");
