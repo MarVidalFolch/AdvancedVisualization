@@ -48,7 +48,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 
 	{		
 		std::vector<char*> volume_filenames = { "data/volumes/foot_16_16.png", "data/volumes/teapot_16_16.png", "data/volumes/bonsai_16_16.png" };
-		std::vector<char*> tf_filenames = { "data/foot_tf2.png", "data/foot_tf.png", "data/blueNoise.png"};
+		std::vector<char*> tf_filenames = { "data/foot_tf2.png", "data/teapot_tf.png", "data/bonsai_tf.png"};
 
 		std::vector<Texture*> textures_volumes;
 		std::vector<Texture*> tf_textures;
