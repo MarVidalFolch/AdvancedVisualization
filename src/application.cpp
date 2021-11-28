@@ -110,6 +110,10 @@ void Application::render(void)
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
+	//Draw the floor grid
+	if (render_debug)
+		drawGrid();
+
 	for (size_t i = 0; i < node_list.size(); i++) {
 		if(node_list[i]->type != SceneNodeTypes::LIGHT){
 			node_list[i]->render(camera);
@@ -119,13 +123,7 @@ void Application::render(void)
 		}
 		
 		
-	}
-	glDisable(GL_DEPTH_TEST);
-
-
-	//Draw the floor grid
-	if(render_debug)
-		drawGrid();
+	}	
 }
 
 void Application::update(double seconds_elapsed)

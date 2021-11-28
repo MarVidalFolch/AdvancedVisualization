@@ -77,8 +77,8 @@ void computeDotProducts(vec3 N, vec3 L, vec3 V, vec3 H){
 }
 
 
-void computeVectors(vec3 pixel_position, vec3 normal){
-	vec3 sample_pos_world = (u_model * vec4( pixel_position, 0.0) ).xyz;
+void computeVectors(vec3 ray_position_local, vec3 normal){
+	vec3 sample_pos_world = (u_model * vec4( ray_position_local, 0.0) ).xyz;
 	
 	// Light vector in local coordinates
 	vectors.L = normalize(u_light_pos - sample_pos_world);
@@ -107,8 +107,6 @@ void getMaterialProperties(){
 	pbr_mat.metalness = u_metalness_factor;
 	
 	pbr_mat.base_color = vec4(1.0);//u_color;
-	
-	pbr_mat.base_color.xyz = pbr_mat.base_color.xyz;
 	
 	pbr_mat.f_lambert = mix(pbr_mat.base_color.rgb, vec3(0.0), pbr_mat.metalness) * RECIPROCAL_PI;
 	pbr_mat.F0 = mix(vec3(0.04), pbr_mat.base_color.rgb, pbr_mat.metalness);
@@ -208,12 +206,12 @@ vec3 phongIllumination(){
 // END PHONG
 
 vec3 worldCoordsToLocalCoords(vec4 world_coords){
-	// Convert pixel_position from world to local
-	vec4 pixel_position_local = u_inv_model*world_coords;
+	// Convert ray_position_local from world to local
+	vec4 ray_position_local = u_inv_model*world_coords;
 	
 	// Such coordinates are in homogeneous coordinates, but we want cartesian coords
 	// Then, we need to divide by the last coord, and remove the last coordinate
-	return pixel_position_local.xyz / pixel_position_local.w;
+	return ray_position_local.xyz / ray_position_local.w;
 
 }
 
@@ -224,7 +222,7 @@ vec3 worldCoordsToLocalCoordsVectors(vec4 world_vector){
 }
 
 vec3 localCoordsToTextureCoords(vec3 local_coords){
-	// Convert pixel_position from local to texture coords
+	// Convert ray_position_local from local to texture coords
 	return (local_coords + 1.0) / 2.0;
 }
 
@@ -247,20 +245,41 @@ bool isBeforePlane(vec3 position){
 	return false;
 }
 
-vec3 computeGradient(vec3 sample_pos){
-
-	float n_x = texture3D(u_volume_texture, localCoordsToTextureCoords(vec3(sample_pos.x + u_h, sample_pos.y, sample_pos.z))).x - texture3D(u_volume_texture, localCoordsToTextureCoords(vec3(sample_pos.x - u_h, sample_pos.y, sample_pos.z))).x;
-	float n_y = texture3D(u_volume_texture, localCoordsToTextureCoords(vec3(sample_pos.x, sample_pos.y + u_h, sample_pos.z))).x - texture3D(u_volume_texture, localCoordsToTextureCoords(vec3(sample_pos.x, sample_pos.y - u_h, sample_pos.z))).x;
-	float n_z = texture3D(u_volume_texture, localCoordsToTextureCoords(vec3(sample_pos.x, sample_pos.y, sample_pos.z + u_h))).x - texture3D(u_volume_texture, localCoordsToTextureCoords(vec3(sample_pos.x, sample_pos.y, sample_pos.z - u_h))).x;
-
-	return normalize(vec3(n_x,n_y,n_z)/(2.0*u_h)); 
+vec3 computeGradient(vec3 ray_position_local){
+	// X coord neightbors
+	vec3 nx_r = vec3(ray_position_local.x + u_h, ray_position_local.y, ray_position_local.z);
+	vec3 nx_l = vec3(ray_position_local.x - u_h, ray_position_local.y, ray_position_local.z);
+	float d_nx_r = texture3D(u_volume_texture, localCoordsToTextureCoords(nx_r)).x;
+	float d_nx_l = texture3D(u_volume_texture, localCoordsToTextureCoords(nx_l)).x;
+	
+	// Y coord neightbors
+	vec3 ny_up = vec3(ray_position_local.x, ray_position_local.y + u_h, ray_position_local.z);
+	vec3 ny_bt = vec3(ray_position_local.x, ray_position_local.y - u_h, ray_position_local.z);
+	float d_ny_up = texture3D(u_volume_texture, localCoordsToTextureCoords(ny_up)).x;
+	float d_ny_bt = texture3D(u_volume_texture, localCoordsToTextureCoords(ny_bt)).x;
+	
+	// Z coord neightbors
+	vec3 nz_ah = vec3(ray_position_local.x, ray_position_local.y, ray_position_local.z + u_h);
+	vec3 nz_bh = vec3(ray_position_local.x, ray_position_local.y, ray_position_local.z - u_h);
+	float d_nz_ah = texture3D(u_volume_texture, localCoordsToTextureCoords(nz_ah)).x;
+	float d_nz_bh = texture3D(u_volume_texture, localCoordsToTextureCoords(nz_bh)).x;
+	
+	// Compute each component of the gradient
+	float g_x = d_nx_r - d_nx_l;
+	float g_y = d_ny_up - d_ny_bt;
+	float g_z = d_nz_ah - d_nz_bh;
+	
+	vec3 gradient = vec3(g_x,g_y,g_z)/(2.0*u_h);
+	
+	// Since it will be used as an estimator of the Normal, we normalize it.
+	return normalize(gradient); 
 }
 
 void main()
 {
 	// 1. Ray setup
 	// Pixel position in local coords
-	vec3 pixel_position = v_position;
+	vec3 ray_position_local = v_position;
 	// Ray dircetion in world coords
 	vec3 ray_direction = normalize(v_world_position - u_camera_position);
 	// Ray direction in local coords
@@ -270,9 +289,9 @@ void main()
 	vec3 ray_offset = u_step_length*ray_direction;
 	
 	// Offset to prevent jittering
-	pixel_position = addOffset(pixel_position, ray_direction);
+	ray_position_local = addOffset(ray_position_local, ray_direction);
 	
-	vec3 sample_position = localCoordsToTextureCoords(pixel_position);
+	vec3 sample_position = localCoordsToTextureCoords(ray_position_local);
 	
 	
 	// Final color
@@ -297,9 +316,9 @@ void main()
 		float d = texture3D(u_volume_texture, sample_position).x;
 		
 		// Volume clipping and isosurface
-		if((u_apply_plane && isBeforePlane(pixel_position)) || (d < u_isovalue && u_classification_option >= 2.0)){
-			pixel_position += ray_offset;
-			sample_position = localCoordsToTextureCoords(pixel_position);
+		if((u_apply_plane && isBeforePlane(ray_position_local)) || (d < u_isovalue && u_classification_option >= 2.0)){
+			ray_position_local += ray_offset;
+			sample_position = localCoordsToTextureCoords(ray_position_local);
 			continue;
 		}
 
@@ -313,30 +332,31 @@ void main()
 			sample_color = texture2D(u_tf_texture, vec2(d, 0.5));
 		}
 		else if (u_classification_option == 2.0) {
-			vec3 N = -computeGradient(pixel_position);
-			computeVectors(pixel_position, N);
+			vec3 N = -computeGradient(ray_position_local);
+			computeVectors(ray_position_local, N);
 			getMaterialProperties();
 			
-			sample_color = vec4(directLightCompute(), d);
+			sample_color = vec4(directLightCompute(), 1.0);
 		}
 		else if (u_classification_option == 3.0){
-			vec3 N = -computeGradient(pixel_position);
-			computeVectors(pixel_position, N);
+			vec3 N = -computeGradient(ray_position_local);
+			computeVectors(ray_position_local, N);
 			
-			sample_color = vec4(phongIllumination(), d);
+			sample_color = vec4(phongIllumination(), 1.0);
 		}
 		
 
 		// 4. Composition
 		final_color += localCoordsToTextureCoords(vec3(u_step_length)).x * (1.0 - final_color.a)*sample_color;
 		
-		
+
 		// 5. Next sample
-		pixel_position += ray_offset;
-		sample_position = localCoordsToTextureCoords(pixel_position);
+		ray_position_local += ray_offset;
+		sample_position = localCoordsToTextureCoords(ray_position_local);
 	}
 
 	//7. Final color
-	gl_FragColor = final_color*u_brightness;
+	final_color.xyz *= u_brightness;
+	gl_FragColor = final_color;
 
 }
